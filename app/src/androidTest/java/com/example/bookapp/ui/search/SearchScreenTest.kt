@@ -1,53 +1,110 @@
 package com.example.bookapp.ui.search
 
 import androidx.compose.ui.test.assertIsDisplayed
-import com.example.bookapp.MainActivity
-import androidx.compose.ui.test.junit4.createAndroidComposeRule
+import androidx.compose.ui.test.junit4.createComposeRule
+import androidx.compose.ui.test.onNodeWithContentDescription
 import androidx.compose.ui.test.onNodeWithText
-import androidx.compose.ui.test.performClick
-import androidx.compose.ui.test.performTextInput
 import androidx.test.ext.junit.runners.AndroidJUnit4
-import dagger.hilt.android.testing.HiltAndroidRule
-import dagger.hilt.android.testing.HiltAndroidTest
-import org.junit.Before
+import com.example.bookapp.data.repository.SearchResult
+import com.example.bookapp.ui.theme.BookAppTheme
 import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
 
-@HiltAndroidTest
 @RunWith(AndroidJUnit4::class)
 class SearchScreenTest {
 
-    @get:Rule(order = 0)
-    val hiltRule = HiltAndroidRule(this)
+    @get:Rule
+    val composeRule = createComposeRule()
 
-    @get:Rule(order = 1)
-    val composeRule = createAndroidComposeRule<MainActivity>()
-
-    @Before
-    fun setup() {
-        hiltRule.inject()
-    }
-
-    // 11.3 — search field shows results after debounce; spinner during load; error on failure
-    @Test
-    fun searchFieldIsDisplayed() {
-        composeRule.onNodeWithText("Search books by title or author").assertIsDisplayed()
-    }
+    private val fakeResults = listOf(
+        SearchResult(workId = "OL1W", title = "Dune", authors = listOf("Frank Herbert"), coverUrl = null),
+        SearchResult(workId = "OL2W", title = "Foundation", authors = listOf("Isaac Asimov"), coverUrl = null)
+    )
 
     @Test
-    fun typingInSearchFieldShowsInput() {
-        composeRule.onNodeWithText("Search books by title or author").performTextInput("Dune")
+    fun loadingSpinnerVisibleDuringLoadingState() {
+        composeRule.setContent {
+            BookAppTheme {
+                SearchScreenContent(
+                    uiState = SearchUiState.Loading,
+                    query = "dune",
+                    onQueryChange = {},
+                    isBookmarked = { false },
+                    onBookmarkToggle = { _, _ -> },
+                    onNavigateToDetail = {}
+                )
+            }
+        }
+        composeRule.onNodeWithContentDescription("Loading").assertIsDisplayed()
+    }
+
+    @Test
+    fun errorMessageVisibleDuringErrorState() {
+        composeRule.setContent {
+            BookAppTheme {
+                SearchScreenContent(
+                    uiState = SearchUiState.Error("Something went wrong. Try searching again."),
+                    query = "dune",
+                    onQueryChange = {},
+                    isBookmarked = { false },
+                    onBookmarkToggle = { _, _ -> },
+                    onNavigateToDetail = {}
+                )
+            }
+        }
+        composeRule.onNodeWithText("Something went wrong. Try searching again.").assertIsDisplayed()
+    }
+
+    @Test
+    fun resultsListVisibleDuringSuccessState() {
+        composeRule.setContent {
+            BookAppTheme {
+                SearchScreenContent(
+                    uiState = SearchUiState.Success(results = fakeResults),
+                    query = "dune",
+                    onQueryChange = {},
+                    isBookmarked = { false },
+                    onBookmarkToggle = { _, _ -> },
+                    onNavigateToDetail = {}
+                )
+            }
+        }
         composeRule.onNodeWithText("Dune").assertIsDisplayed()
+        composeRule.onNodeWithText("Foundation").assertIsDisplayed()
     }
 
-    // 11.4 — tapping bookmark icon on a result updates to filled state
-    // Note: this test requires a real network response or a Hilt-provided fake.
-    // The shape of the test is correct; a FakeBookRepository can be injected via
-    // @UninstallModules + @BindValue to provide deterministic results.
     @Test
-    fun searchScreenIsReachableFromBottomNav() {
-        composeRule.onNodeWithText("Search").assertIsDisplayed()
-        composeRule.onNodeWithText("Bookmarks").assertIsDisplayed()
+    fun bookmarkIconFilledWhenItemIsBookmarked() {
+        composeRule.setContent {
+            BookAppTheme {
+                SearchScreenContent(
+                    uiState = SearchUiState.Success(results = fakeResults),
+                    query = "dune",
+                    onQueryChange = {},
+                    isBookmarked = { workId -> workId == "OL1W" },
+                    onBookmarkToggle = { _, _ -> },
+                    onNavigateToDetail = {}
+                )
+            }
+        }
+        composeRule.onNodeWithContentDescription("Remove bookmark").assertIsDisplayed()
+    }
+
+    @Test
+    fun bookmarkIconOutlineWhenItemIsNotBookmarked() {
+        composeRule.setContent {
+            BookAppTheme {
+                SearchScreenContent(
+                    uiState = SearchUiState.Success(results = fakeResults),
+                    query = "dune",
+                    onQueryChange = {},
+                    isBookmarked = { false },
+                    onBookmarkToggle = { _, _ -> },
+                    onNavigateToDetail = {}
+                )
+            }
+        }
+        composeRule.onNodeWithContentDescription("Add bookmark").assertIsDisplayed()
     }
 }
