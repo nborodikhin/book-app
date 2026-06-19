@@ -6,6 +6,7 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.LazyListState
 import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.material.icons.Icons
@@ -21,10 +22,13 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.example.bookapp.data.repository.SearchResult
 import com.example.bookapp.ui.components.BookListItem
+import com.example.bookapp.ui.theme.BookAppTheme
 
 @Composable
 fun SearchScreen(
@@ -35,7 +39,6 @@ fun SearchScreen(
     val query by viewModel.searchQuery.collectAsStateWithLifecycle()
     val listState = rememberLazyListState()
 
-    // 6.5 — detect scroll near end (within 5 items)
     LaunchedEffect(listState) {
         snapshotFlow {
             val layoutInfo = listState.layoutInfo
@@ -47,10 +50,35 @@ fun SearchScreen(
         }
     }
 
+    SearchScreenContent(
+        uiState = uiState,
+        query = query,
+        onQueryChange = { viewModel.searchQuery.value = it },
+        isBookmarked = { workId ->
+            viewModel.isBookmarked(workId).collectAsStateWithLifecycle(initialValue = false).value
+        },
+        onBookmarkToggle = { result, currentlyBookmarked ->
+            viewModel.toggleBookmark(result, currentlyBookmarked)
+        },
+        onNavigateToDetail = onNavigateToDetail,
+        listState = listState
+    )
+}
+
+@Composable
+internal fun SearchScreenContent(
+    uiState: SearchUiState,
+    query: String,
+    onQueryChange: (String) -> Unit,
+    isBookmarked: @Composable (String) -> Boolean,
+    onBookmarkToggle: (SearchResult, Boolean) -> Unit,
+    onNavigateToDetail: (String) -> Unit,
+    listState: LazyListState = rememberLazyListState()
+) {
     Column(modifier = Modifier.fillMaxSize()) {
         OutlinedTextField(
             value = query,
-            onValueChange = { viewModel.searchQuery.value = it },
+            onValueChange = onQueryChange,
             placeholder = { Text("Search books by title or author") },
             singleLine = true,
             modifier = Modifier
@@ -70,14 +98,13 @@ fun SearchScreen(
             is SearchUiState.Success -> {
                 LazyColumn(state = listState, modifier = Modifier.fillMaxSize()) {
                     itemsIndexed(state.results, key = { _, item -> item.workId }) { _, result ->
-                        val isBookmarked by viewModel.isBookmarked(result.workId)
-                            .collectAsStateWithLifecycle(initialValue = false)
+                        val bookmarked = isBookmarked(result.workId)
                         BookListItem(
                             title = result.title,
                             authors = result.authors.joinToString(", "),
                             coverUrl = result.coverUrl,
-                            isBookmarked = isBookmarked,
-                            onBookmarkToggle = { viewModel.toggleBookmark(result, isBookmarked) },
+                            isBookmarked = bookmarked,
+                            onBookmarkToggle = { onBookmarkToggle(result, bookmarked) },
                             onClick = { onNavigateToDetail(result.workId) }
                         )
                     }
@@ -113,5 +140,70 @@ fun SearchScreen(
                 }
             }
         }
+    }
+}
+
+private val fakeResults = listOf(
+    SearchResult(workId = "OL1W", title = "Dune", authors = listOf("Frank Herbert"), coverUrl = null),
+    SearchResult(workId = "OL2W", title = "Foundation", authors = listOf("Isaac Asimov"), coverUrl = null)
+)
+
+@Preview(showBackground = true)
+@Composable
+private fun SearchIdlePreview() {
+    BookAppTheme {
+        SearchScreenContent(
+            uiState = SearchUiState.Idle,
+            query = "",
+            onQueryChange = {},
+            isBookmarked = { false },
+            onBookmarkToggle = { _, _ -> },
+            onNavigateToDetail = {}
+        )
+    }
+}
+
+@Preview(showBackground = true)
+@Composable
+private fun SearchLoadingPreview() {
+    BookAppTheme {
+        SearchScreenContent(
+            uiState = SearchUiState.Loading,
+            query = "dune",
+            onQueryChange = {},
+            isBookmarked = { false },
+            onBookmarkToggle = { _, _ -> },
+            onNavigateToDetail = {}
+        )
+    }
+}
+
+@Preview(showBackground = true)
+@Composable
+private fun SearchSuccessPreview() {
+    BookAppTheme {
+        SearchScreenContent(
+            uiState = SearchUiState.Success(results = fakeResults),
+            query = "dune",
+            onQueryChange = {},
+            isBookmarked = { workId -> workId == "OL1W" },
+            onBookmarkToggle = { _, _ -> },
+            onNavigateToDetail = {}
+        )
+    }
+}
+
+@Preview(showBackground = true)
+@Composable
+private fun SearchErrorPreview() {
+    BookAppTheme {
+        SearchScreenContent(
+            uiState = SearchUiState.Error("Something went wrong. Try searching again."),
+            query = "dune",
+            onQueryChange = {},
+            isBookmarked = { false },
+            onBookmarkToggle = { _, _ -> },
+            onNavigateToDetail = {}
+        )
     }
 }
