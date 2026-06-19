@@ -28,6 +28,6 @@
 
 ## 5. Composable-level instrumented tests
 
-- [ ] 5.1 Replace `BookDetailScreenTest` with tests using `createComposeRule` + `BookDetailScreenContent`: note visible/hidden by `isBookmarked`; counter shows `"0/300"` and updates; input capped at 300 chars; loading and error states render
+- [x] 5.1 Replace `BookDetailScreenTest` with tests using `createComposeRule` + `BookDetailScreenContent`: note visible/hidden by `isBookmarked`; counter shows `"0/300"` and updates; input capped at 300 chars; loading and error states render
 - [ ] 5.2 Replace `SearchScreenTest` with tests using `createComposeRule` + `SearchScreenContent`: loading spinner visible; error message visible; results list visible; bookmark icon filled vs outline
 - [ ] 5.3 Replace `BookmarksScreenTest` with tests using `createComposeRule` + `BookmarksScreenContent`: empty state message shown; list items rendered when non-empty
