@@ -11,10 +11,13 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.example.bookapp.data.local.BookEntity
 import com.example.bookapp.ui.components.BookListItem
+import com.example.bookapp.ui.theme.BookAppTheme
 
 @Composable
 fun BookmarksScreen(
@@ -23,6 +26,19 @@ fun BookmarksScreen(
 ) {
     val books by viewModel.bookmarkedBooks.collectAsStateWithLifecycle()
 
+    BookmarksScreenContent(
+        books = books,
+        onToggleBookmark = { book -> viewModel.toggleBookmark(book, currentlyBookmarked = true) },
+        onNavigateToDetail = onNavigateToDetail
+    )
+}
+
+@Composable
+internal fun BookmarksScreenContent(
+    books: List<BookEntity>,
+    onToggleBookmark: (BookEntity) -> Unit,
+    onNavigateToDetail: (String) -> Unit
+) {
     if (books.isEmpty()) {
         Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
             Text(
@@ -40,10 +56,37 @@ fun BookmarksScreen(
                     authors = book.authors,
                     coverUrl = book.coverUrl,
                     isBookmarked = true,
-                    onBookmarkToggle = { viewModel.toggleBookmark(book, currentlyBookmarked = true) },
+                    onBookmarkToggle = { onToggleBookmark(book) },
                     onClick = { onNavigateToDetail(book.workId) }
                 )
             }
         }
+    }
+}
+
+@Preview(showBackground = true)
+@Composable
+private fun BookmarksEmptyPreview() {
+    BookAppTheme {
+        BookmarksScreenContent(
+            books = emptyList(),
+            onToggleBookmark = {},
+            onNavigateToDetail = {}
+        )
+    }
+}
+
+@Preview(showBackground = true)
+@Composable
+private fun BookmarksNonEmptyPreview() {
+    BookAppTheme {
+        BookmarksScreenContent(
+            books = listOf(
+                BookEntity(workId = "OL1W", title = "Dune", authors = "Frank Herbert", synopsis = "", coverUrl = null),
+                BookEntity(workId = "OL2W", title = "Foundation", authors = "Isaac Asimov", synopsis = "", coverUrl = null)
+            ),
+            onToggleBookmark = {},
+            onNavigateToDetail = {}
+        )
     }
 }
