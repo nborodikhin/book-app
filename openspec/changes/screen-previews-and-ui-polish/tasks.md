@@ -24,7 +24,7 @@
 - [x] 4.1 Add `@Preview` functions for `SearchScreen`: Idle, Loading, Success (with items), Error — each calls `SearchScreenContent` with hardcoded fake data
 - [x] 4.2 Add `@Preview` functions for `BookmarksScreen`: Empty, Non-empty — each calls `BookmarksScreenContent` with hardcoded fake data
 - [x] 4.3 Add `@Preview` functions for `BookDetailScreen`: Loading, Error, Success (not bookmarked), Success (bookmarked with note) — each calls `BookDetailScreenContent` with hardcoded fake data
-- [ ] 4.4 Add `@Preview` functions for `BookListItem`: bookmarked, not bookmarked — calls `BookListItem` directly
+- [x] 4.4 Add `@Preview` functions for `BookListItem`: bookmarked, not bookmarked — calls `BookListItem` directly
 
 ## 5. Composable-level instrumented tests
 

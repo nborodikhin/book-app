@@ -1,5 +1,8 @@
 package com.example.bookapp.ui.components
 
+import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.runtime.Composable
+import com.example.bookapp.ui.theme.BookAppTheme
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -79,5 +82,35 @@ fun BookListItem(
                 tint = MaterialTheme.colorScheme.primary
             )
         }
+    }
+}
+
+@Preview(showBackground = true)
+@Composable
+private fun BookListItemBookmarkedPreview() {
+    BookAppTheme {
+        BookListItem(
+            title = "Dune",
+            authors = "Frank Herbert",
+            coverUrl = null,
+            isBookmarked = true,
+            onBookmarkToggle = {},
+            onClick = {}
+        )
+    }
+}
+
+@Preview(showBackground = true)
+@Composable
+private fun BookListItemNotBookmarkedPreview() {
+    BookAppTheme {
+        BookListItem(
+            title = "Foundation",
+            authors = "Isaac Asimov",
+            coverUrl = null,
+            isBookmarked = false,
+            onBookmarkToggle = {},
+            onClick = {}
+        )
     }
 }
