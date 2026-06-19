@@ -77,6 +77,19 @@ class BookRepositoryTest {
         verify(api, times(1)).searchBooks(any(), any(), any(), any())
     }
 
+    @Test
+    fun `getBookDetail uses authors from search index when work API has none`() = testScope.runTest {
+        val doc = SearchDoc(key = "/works/OL1W", title = "Dune", authorName = listOf("Frank Herbert"), coverId = 123L)
+        whenever(api.searchBooks(any(), any(), any(), any())).thenReturn(SearchResponse(1, listOf(doc)))
+        whenever(bookDao.getBook("OL1W")).thenReturn(null)
+        whenever(api.getWork("OL1W")).thenReturn(WorkDetailResponse(title = "Dune", key = "/works/OL1W"))
+
+        repository.search("dune", 1)
+        repository.getBookDetail("OL1W")
+
+        verify(bookDao).insert(org.mockito.kotlin.argThat { authors == "Frank Herbert" })
+    }
+
     // 10.2 — setBookmarked(true) on new book fetches work detail and inserts into Room
     @Test
     fun `setBookmarked true on new book fetches detail and inserts into Room`() = testScope.runTest {

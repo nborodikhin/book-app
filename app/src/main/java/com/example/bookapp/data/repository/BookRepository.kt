@@ -25,6 +25,9 @@ class BookRepository @Inject constructor(
     private val dataStore: DataStore<Preferences>
 ) {
     private val searchCache = mutableMapOf<String, List<SearchResult>>()
+    // Secondary index populated by search(); lets getBookDetail() fill author/cover
+    // for books not yet in Room, since the work-detail API doesn't return authors.
+    private val workIdIndex = mutableMapOf<String, SearchResult>()
 
     companion object {
         private val BOOKMARKED_IDS = stringSetPreferencesKey("bookmarked_ids")
@@ -39,20 +42,22 @@ class BookRepository @Inject constructor(
         val response = api.searchBooks(query = query, page = page, limit = 20)
         val results = response.docs.map { it.toSearchResult() }
         searchCache[key] = results
+        results.forEach { workIdIndex[it.workId] = it }
         return results
     }
 
     // 4.3 — checks Room first, falls back to network
     suspend fun getBookDetail(workId: String): BookEntity? {
         bookDao.getBook(workId)?.let { return it }
+        val cached = workIdIndex[workId]
         return try {
             val detail = api.getWork(workId)
             val entity = BookEntity(
                 workId = workId,
-                title = detail.title,
-                authors = "",
+                title = detail.title.ifBlank { cached?.title ?: "" },
+                authors = cached?.authors?.joinToString(", ") ?: "",
                 synopsis = detail.synopsis(),
-                coverUrl = detail.coverUrl()
+                coverUrl = detail.coverUrl() ?: cached?.coverUrl
             )
             bookDao.insert(entity)
             bookDao.getBook(workId)
@@ -81,7 +86,7 @@ class BookRepository @Inject constructor(
                     val entity = BookEntity(
                         workId = workId,
                         title = detail.title.ifBlank { title },
-                        authors = (if (detail.title.isNotBlank()) authors else authors).joinToString(", "),
+                        authors = authors.joinToString(", "),
                         synopsis = detail.synopsis(),
                         coverUrl = detail.coverUrl() ?: coverUrl
                     )
