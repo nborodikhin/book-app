@@ -7,6 +7,9 @@ import app.cash.turbine.test
 import com.example.bookapp.data.local.AppDatabase
 import com.example.bookapp.data.local.BookDao
 import com.example.bookapp.data.local.BookEntity
+import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.test.UnconfinedTestDispatcher
 import kotlinx.coroutines.test.runTest
 import org.junit.After
 import org.junit.Assert.assertEquals
@@ -15,6 +18,7 @@ import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
 
+@OptIn(ExperimentalCoroutinesApi::class)
 @RunWith(AndroidJUnit4::class)
 class BookDaoTest {
 
@@ -26,7 +30,7 @@ class BookDaoTest {
         db = Room.inMemoryDatabaseBuilder(
             ApplicationProvider.getApplicationContext(),
             AppDatabase::class.java
-        ).allowMainThreadQueries().build()
+        ).build()
         dao = db.bookDao()
     }
 
@@ -51,13 +55,12 @@ class BookDaoTest {
     fun entityRetainedWithoutDeleteMethod() = runTest {
         val entity = BookEntity("OL1W", "Dune", "Frank Herbert", "A desert planet.", null)
         dao.insert(entity)
-        // BookDao has no delete method by design; just verify it persists
         assertNotNull(dao.getBook("OL1W"))
     }
 
-    // 11.2 — getBookmarkedBooks() Flow emits updated list when new entities inserted
+    // 11.2 — getAllBooks() Flow emits updated list when new entities inserted
     @Test
-    fun getAllBooksFlowEmitsUpdatedList() = runTest {
+    fun getAllBooksFlowEmitsUpdatedList() = runTest(UnconfinedTestDispatcher()) {
         dao.getAllBooks().test {
             assertEquals(emptyList<BookEntity>(), awaitItem())
 

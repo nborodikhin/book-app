@@ -74,7 +74,7 @@ class BookDetailScreenTest {
             BookAppTheme {
                 androidx.compose.material3.OutlinedTextField(
                     value = note,
-                    onValueChange = { if (it.length <= 300) note = it },
+                    onValueChange = { note = it.take(300) },
                     supportingText = { androidx.compose.material3.Text("${note.length}/300") }
                 )
             }
