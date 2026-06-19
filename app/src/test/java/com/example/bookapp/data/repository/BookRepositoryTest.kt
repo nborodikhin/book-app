@@ -1,4 +1,4 @@
-package com.example.bookapp
+package com.example.bookapp.data.repository
 
 import androidx.datastore.core.DataStore
 import androidx.datastore.preferences.core.PreferenceDataStoreFactory

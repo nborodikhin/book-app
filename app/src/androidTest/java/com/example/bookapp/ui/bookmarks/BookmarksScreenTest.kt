@@ -1,6 +1,7 @@
-package com.example.bookapp
+package com.example.bookapp.ui.bookmarks
 
 import androidx.compose.ui.test.assertIsDisplayed
+import com.example.bookapp.MainActivity
 import androidx.compose.ui.test.junit4.createAndroidComposeRule
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick

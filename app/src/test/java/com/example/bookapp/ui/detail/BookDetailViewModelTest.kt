@@ -1,4 +1,4 @@
-package com.example.bookapp
+package com.example.bookapp.ui.detail
 
 import androidx.lifecycle.SavedStateHandle
 import app.cash.turbine.test

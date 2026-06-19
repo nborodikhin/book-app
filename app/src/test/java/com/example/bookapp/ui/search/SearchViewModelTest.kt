@@ -1,4 +1,4 @@
-package com.example.bookapp
+package com.example.bookapp.ui.search
 
 import app.cash.turbine.test
 import com.example.bookapp.data.repository.BookRepository

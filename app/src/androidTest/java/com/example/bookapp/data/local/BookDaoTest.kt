@@ -1,4 +1,4 @@
-package com.example.bookapp
+package com.example.bookapp.data.local
 
 import androidx.room.Room
 import androidx.test.core.app.ApplicationProvider
