@@ -24,17 +24,25 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import coil.compose.AsyncImage
 import coil.request.ImageRequest
-import androidx.compose.ui.platform.LocalContext
 import com.example.bookapp.R
+import com.example.bookapp.data.local.BookEntity
+import com.example.bookapp.ui.theme.BookAppTheme
+import kotlinx.coroutines.flow.first
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -45,8 +53,41 @@ fun BookDetailScreen(
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
     val isBookmarked by viewModel.isBookmarked.collectAsStateWithLifecycle()
-    val note by viewModel.note.collectAsStateWithLifecycle()
 
+    var noteText by remember { mutableStateOf("") }
+    var noteInitialized by remember { mutableStateOf(false) }
+
+    LaunchedEffect(Unit) {
+        noteText = viewModel.note.first()
+        noteInitialized = true
+    }
+
+    BookDetailScreenContent(
+        uiState = uiState,
+        isBookmarked = isBookmarked,
+        noteText = noteText,
+        noteInitialized = noteInitialized,
+        onBack = onBack,
+        onToggleBookmark = { viewModel.toggleBookmark() },
+        onNoteChange = {
+            val capped = it.take(300)
+            noteText = capped
+            viewModel.onNoteChange(capped)
+        }
+    )
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+internal fun BookDetailScreenContent(
+    uiState: DetailUiState,
+    isBookmarked: Boolean,
+    noteText: String,
+    noteInitialized: Boolean,
+    onBack: () -> Unit,
+    onToggleBookmark: () -> Unit,
+    onNoteChange: (String) -> Unit
+) {
     Scaffold(
         topBar = {
             TopAppBar(
@@ -84,74 +125,159 @@ fun BookDetailScreen(
 
             is DetailUiState.Success -> {
                 val book = state.book
-                Column(
+                Box(
                     modifier = Modifier
                         .fillMaxSize()
                         .padding(innerPadding)
-                        .verticalScroll(rememberScrollState())
                 ) {
-                    // cover with bookmark overlay
-                    Box(
+                    Column(
                         modifier = Modifier
-                            .fillMaxWidth()
-                            .aspectRatio(2f / 3f)
+                            .fillMaxSize()
+                            .verticalScroll(rememberScrollState())
                     ) {
-                        AsyncImage(
-                            model = ImageRequest.Builder(LocalContext.current)
-                                .data(book.coverUrl)
-                                .placeholder(R.drawable.ic_book_placeholder)
-                                .error(R.drawable.ic_error_image)
-                                .crossfade(true)
-                                .build(),
-                            contentDescription = "Cover of ${book.title}",
-                            contentScale = ContentScale.Crop,
-                            modifier = Modifier.fillMaxSize()
-                        )
-                        IconButton(
-                            onClick = { viewModel.toggleBookmark() },
+                        Box(
                             modifier = Modifier
-                                .align(Alignment.TopEnd)
-                                .padding(8.dp)
+                                .fillMaxWidth()
+                                .aspectRatio(2f / 3f)
                         ) {
-                            Icon(
-                                imageVector = if (isBookmarked) Icons.Filled.Bookmark else Icons.Outlined.BookmarkBorder,
-                                contentDescription = if (isBookmarked) "Remove bookmark" else "Add bookmark",
-                                tint = MaterialTheme.colorScheme.primary
+                            AsyncImage(
+                                model = ImageRequest.Builder(LocalContext.current)
+                                    .data(book.coverUrl)
+                                    .placeholder(R.drawable.ic_book_placeholder)
+                                    .error(R.drawable.ic_error_image)
+                                    .crossfade(true)
+                                    .build(),
+                                contentDescription = "Cover of ${book.title}",
+                                contentScale = ContentScale.Crop,
+                                modifier = Modifier.fillMaxSize()
                             )
+                        }
+
+                        Column(modifier = Modifier.padding(16.dp)) {
+                            Text(text = book.title, style = MaterialTheme.typography.headlineSmall)
+                            if (book.authors.isNotBlank()) {
+                                Spacer(modifier = Modifier.height(4.dp))
+                                Text(
+                                    text = book.authors,
+                                    style = MaterialTheme.typography.bodyMedium,
+                                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                                )
+                            }
+                            Spacer(modifier = Modifier.height(12.dp))
+                            Text(
+                                text = book.synopsis.ifBlank { "No description available." },
+                                style = MaterialTheme.typography.bodyMedium
+                            )
+
+                            if (isBookmarked) {
+                                Spacer(modifier = Modifier.height(16.dp))
+                                OutlinedTextField(
+                                    value = noteText,
+                                    onValueChange = onNoteChange,
+                                    label = { Text("My note") },
+                                    supportingText = { Text("${noteText.length}/300") },
+                                    enabled = noteInitialized,
+                                    modifier = Modifier.fillMaxWidth(),
+                                    minLines = 3
+                                )
+                            }
                         }
                     }
 
-                    Column(modifier = Modifier.padding(16.dp)) {
-                        Text(text = book.title, style = MaterialTheme.typography.headlineSmall)
-                        if (book.authors.isNotBlank()) {
-                            Spacer(modifier = Modifier.height(4.dp))
-                            Text(
-                                text = book.authors,
-                                style = MaterialTheme.typography.bodyMedium,
-                                color = MaterialTheme.colorScheme.onSurfaceVariant
-                            )
-                        }
-                        Spacer(modifier = Modifier.height(12.dp))
-                        Text(
-                            text = book.synopsis.ifBlank { "No description available." },
-                            style = MaterialTheme.typography.bodyMedium
+                    IconButton(
+                        onClick = onToggleBookmark,
+                        modifier = Modifier
+                            .align(Alignment.TopEnd)
+                            .padding(8.dp)
+                    ) {
+                        Icon(
+                            imageVector = if (isBookmarked) Icons.Filled.Bookmark else Icons.Outlined.BookmarkBorder,
+                            contentDescription = if (isBookmarked) "Remove bookmark" else "Add bookmark",
+                            tint = MaterialTheme.colorScheme.primary
                         )
-
-                        // 8.3 — note field only when bookmarked
-                        if (isBookmarked) {
-                            Spacer(modifier = Modifier.height(16.dp))
-                            OutlinedTextField(
-                                value = note,
-                                onValueChange = { viewModel.onNoteChange(it) },
-                                label = { Text("My note") },
-                                supportingText = { Text("${note.length}/300") },
-                                modifier = Modifier.fillMaxWidth(),
-                                minLines = 3
-                            )
-                        }
                     }
                 }
             }
         }
+    }
+}
+
+@Preview(showBackground = true)
+@Composable
+private fun BookDetailLoadingPreview() {
+    BookAppTheme {
+        BookDetailScreenContent(
+            uiState = DetailUiState.Loading,
+            isBookmarked = false,
+            noteText = "",
+            noteInitialized = false,
+            onBack = {},
+            onToggleBookmark = {},
+            onNoteChange = {}
+        )
+    }
+}
+
+@Preview(showBackground = true)
+@Composable
+private fun BookDetailErrorPreview() {
+    BookAppTheme {
+        BookDetailScreenContent(
+            uiState = DetailUiState.Error("Could not load book details."),
+            isBookmarked = false,
+            noteText = "",
+            noteInitialized = false,
+            onBack = {},
+            onToggleBookmark = {},
+            onNoteChange = {}
+        )
+    }
+}
+
+@Preview(showBackground = true)
+@Composable
+private fun BookDetailSuccessNotBookmarkedPreview() {
+    BookAppTheme {
+        BookDetailScreenContent(
+            uiState = DetailUiState.Success(
+                BookEntity(
+                    workId = "OL1W",
+                    title = "Dune",
+                    authors = "Frank Herbert",
+                    synopsis = "A young nobleman flees to a desert planet where he must lead a rebellion.",
+                    coverUrl = null
+                )
+            ),
+            isBookmarked = false,
+            noteText = "",
+            noteInitialized = true,
+            onBack = {},
+            onToggleBookmark = {},
+            onNoteChange = {}
+        )
+    }
+}
+
+@Preview(showBackground = true)
+@Composable
+private fun BookDetailSuccessBookmarkedPreview() {
+    BookAppTheme {
+        BookDetailScreenContent(
+            uiState = DetailUiState.Success(
+                BookEntity(
+                    workId = "OL1W",
+                    title = "Dune",
+                    authors = "Frank Herbert",
+                    synopsis = "A young nobleman flees to a desert planet where he must lead a rebellion.",
+                    coverUrl = null
+                )
+            ),
+            isBookmarked = true,
+            noteText = "Great read for the holidays!",
+            noteInitialized = true,
+            onBack = {},
+            onToggleBookmark = {},
+            onNoteChange = {}
+        )
     }
 }
