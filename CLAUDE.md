@@ -24,6 +24,20 @@ Use OpenSpec skills to plan and track all feature work:
 
 All feature changes should go through OpenSpec before implementation begins.
 
+## Kotlin Coroutines
+
+Never use `catch (e: Exception)` alone in a suspend function — it swallows `CancellationException` and breaks cooperative cancellation. Always add a rethrow guard first:
+
+```kotlin
+} catch (e: CancellationException) {
+    throw e
+} catch (e: Exception) {
+    // handle genuine errors
+}
+```
+
+This applies to every `try/catch` inside a `suspend fun`, regardless of whether the catch has intentional fallback logic.
+
 ## Commits
 
 Create a git commit after every completed task. Keep commit messages concise and focused on what the task accomplished.
