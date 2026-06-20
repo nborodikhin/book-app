@@ -18,8 +18,12 @@ import javax.inject.Inject
 sealed interface SearchUiState {
     data object Idle : SearchUiState
     data object Loading : SearchUiState
-    data class Success(val results: List<SearchResult>, val isLoadingMore: Boolean = false) : SearchUiState
-    data class Error(val message: String) : SearchUiState
+    data class Success(
+        val results: List<SearchResult>,
+        val isLoadingMore: Boolean = false,
+        val paginationError: Boolean = false
+    ) : SearchUiState
+    data class Error(val message: String, val onRetry: () -> Unit) : SearchUiState
 }
 
 @HiltViewModel
@@ -74,9 +78,15 @@ class SearchViewModel @Inject constructor(
         if (current is SearchUiState.Success && !current.isLoadingMore) {
             val query = searchQuery.value
             if (query.isBlank()) return
-            _uiState.value = current.copy(isLoadingMore = true)
+            _uiState.value = current.copy(isLoadingMore = true, paginationError = false)
             viewModelScope.launch { fetchPage(query, currentPage + 1) }
         }
+    }
+
+    fun retrySearch() {
+        val query = searchQuery.value
+        if (query.isBlank()) return
+        viewModelScope.launch { resetAndSearch(query) }
     }
 
     private suspend fun fetchPage(query: String, page: Int) {
@@ -88,7 +98,13 @@ class SearchViewModel @Inject constructor(
             currentPage = page
             _uiState.value = SearchUiState.Success(accumulatedResults.toList())
         } catch (e: Exception) {
-            _uiState.value = SearchUiState.Error("Something went wrong. Try searching again.")
+            if (page == 1) {
+                _uiState.value = SearchUiState.Error("Something went wrong.", ::retrySearch)
+            } else {
+                val current = _uiState.value
+                val existing = if (current is SearchUiState.Success) current.results else accumulatedResults.toList()
+                _uiState.value = SearchUiState.Success(existing, paginationError = true)
+            }
         }
     }
 
