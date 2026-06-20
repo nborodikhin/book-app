@@ -42,6 +42,7 @@ import coil.request.ImageRequest
 import com.example.bookapp.R
 import com.example.bookapp.data.local.BookEntity
 import com.example.bookapp.ui.theme.BookAppTheme
+import kotlinx.coroutines.flow.filterNotNull
 import kotlinx.coroutines.flow.first
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -58,7 +59,7 @@ fun BookDetailScreen(
     var noteInitialized by remember { mutableStateOf(false) }
 
     LaunchedEffect(Unit) {
-        noteText = viewModel.note.first()
+        noteText = viewModel.note.filterNotNull().first()
         noteInitialized = true
     }
 

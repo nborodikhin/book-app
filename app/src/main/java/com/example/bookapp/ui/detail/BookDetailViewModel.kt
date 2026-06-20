@@ -36,8 +36,8 @@ class BookDetailViewModel @Inject constructor(
     val isBookmarked: StateFlow<Boolean> = repository.isBookmarked(workId)
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), false)
 
-    val note: StateFlow<String> = repository.getNote(workId)
-        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), "")
+    val note: StateFlow<String?> = repository.getNote(workId)
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), null)
 
     init {
         loadDetail()

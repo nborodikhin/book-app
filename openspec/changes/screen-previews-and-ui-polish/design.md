@@ -34,27 +34,28 @@ Alternative considered: extract a separate `*Content` composable per screen. Rej
 
 ### 2. Note field local state initialization
 
-**Decision**: use `rememberSaveable { mutableStateOf("") }` in `BookDetailScreen`, initialized via a `LaunchedEffect(Unit)` that takes the **first** emission from `viewModel.note` and sets the local state, then stops listening. Keystrokes update local state directly and call `viewModel.onNoteChange(...)` for persistence; the VM's `note` flow is never observed again by the text field.
+**Decision**: use `remember { mutableStateOf("") }` and a `remember { mutableStateOf(false) }` initialized flag in `BookDetailScreen`. A `LaunchedEffect(Unit)` reads the **first** emission from `viewModel.note`, sets `noteText`, then sets the flag to `true`. The `OutlinedTextField` is `enabled = noteInitialized`. Keystrokes update local state directly and call `viewModel.onNoteChange(...)` for persistence; the VM's `note` flow is never observed again by the text field.
 
 ```kotlin
-var noteText by rememberSaveable { mutableStateOf("") }
-val noteFromVm by viewModel.note.collectAsStateWithLifecycle()
+var noteText by remember { mutableStateOf("") }
+var noteInitialized by remember { mutableStateOf(false) }
 
-// Initialize once
-LaunchedEffect(noteFromVm) {
-    // only initialize, not overwrite
-}
-```
-
-More precisely — use `LaunchedEffect(Unit)` with a `first()` terminal on the note flow:
-
-```kotlin
 LaunchedEffect(Unit) {
-    noteText = viewModel.note.first()
+    noteText = viewModel.note.filterNotNull().first()
+    noteInitialized = true
 }
+
+OutlinedTextField(
+    value = noteText,
+    enabled = noteInitialized,
+    onValueChange = { noteText = it; viewModel.onNoteChange(it) },
+    ...
+)
 ```
 
-This reads the persisted value exactly once on composition, then the screen owns the state. `rememberSaveable` ensures the value survives recomposition and configuration changes (e.g., rotation) without another DB read.
+`viewModel.note` is `StateFlow<String?>` with an initial value of `null`. Using `filterNotNull().first()` skips the synthetic `null` and suspends until the actual DB emission arrives. Using `""` as the initial value would cause `.first()` to return immediately with an empty string before the persisted note loads.
+
+This reads the persisted value exactly once on composition, then the screen owns the state. Blocking edits until initialized prevents the user from typing into a stale empty field that would then be overwritten by the arriving value. `rememberSaveable` is not needed — the ViewModel survives configuration changes and holds the current note value, so `LaunchedEffect(Unit)` re-fires on activity recreation and reinitializes `noteText` from the VM.
 
 Alternative considered: `collectAsStateWithLifecycle` + debounce on saves (VM ignores incoming updates from the flow after saving). Rejected — still round-trips through DB and StateFlow, still risks cursor reset.
 
@@ -108,9 +109,9 @@ Alternative considered: Hilt integration tests with `FakeBookRepository` (`@Unin
 
 ## Risks / Trade-offs
 
-- **`LaunchedEffect(Unit)` race**: if `viewModel.note` hasn't emitted by the time the coroutine starts, `first()` will suspend until it does, which is correct. If the user types before the first emission arrives, their input overwrites the empty initial state — then the `first()` arrives and is ignored because `LaunchedEffect(Unit)` already completed. This is safe. → No mitigation needed.
+- **`LaunchedEffect(Unit)` race**: if `viewModel.note` hasn't emitted by the time the coroutine starts, `first()` will suspend until it does, which is correct. The field is disabled until initialization completes, so the user cannot type into a stale empty field that would be overwritten by the arriving value. → Mitigated by `enabled = noteInitialized`.
 - **Preview overloads add surface area**: private overloads are hidden from the public API but add slight indirection. → Acceptable trade-off for preview coverage without architecture churn.
-- **`rememberSaveable` with 300-char limit**: if the user manages to paste >300 chars via clipboard before the VM trims it, local state will hold the overlong string momentarily. The VM's `onNoteChange` trims before saving, so persistence is safe; add client-side length guard too for consistency.
+- **300-char limit**: if the user manages to paste >300 chars via clipboard before the VM trims it, local state will hold the overlong string momentarily. The VM's `onNoteChange` trims before saving, so persistence is safe; add client-side length guard too for consistency.
 
 ## Migration Plan
 
