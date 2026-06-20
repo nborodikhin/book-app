@@ -101,7 +101,14 @@ internal fun SearchScreenContent(
                 }
             }
 
-            is SearchUiState.Success -> {
+            is SearchUiState.Success -> if (state.results.isEmpty()) {
+                Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                    Text(
+                        text = "No results",
+                        style = MaterialTheme.typography.bodyMedium
+                    )
+                }
+            } else {
                 LazyColumn(state = listState, modifier = Modifier.fillMaxSize()) {
                     itemsIndexed(state.results, key = { _, item -> item.workId }) { _, result ->
                         val bookmarked = isBookmarked(result.workId)
