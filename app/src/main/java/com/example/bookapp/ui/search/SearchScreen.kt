@@ -11,11 +11,13 @@ import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ErrorOutline
+import androidx.compose.material3.Button
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -63,6 +65,7 @@ fun SearchScreen(
             viewModel.toggleBookmark(result, currentlyBookmarked)
         },
         onNavigateToDetail = onNavigateToDetail,
+        onRetryPagination = { viewModel.loadNextPage() },
         listState = listState
     )
 }
@@ -75,6 +78,7 @@ internal fun SearchScreenContent(
     isBookmarked: @Composable (String) -> Boolean,
     onBookmarkToggle: (SearchResult, Boolean) -> Unit,
     onNavigateToDetail: (String) -> Unit,
+    onRetryPagination: () -> Unit = {},
     listState: LazyListState = rememberLazyListState()
 ) {
     Column(modifier = Modifier.fillMaxSize()) {
@@ -122,6 +126,26 @@ internal fun SearchScreenContent(
                             }
                         }
                     }
+                    if (state.paginationError) {
+                        item {
+                            Box(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .padding(horizontal = 16.dp),
+                                contentAlignment = Alignment.Center
+                            ) {
+                                Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                                    Text(
+                                        text = "Failed to load more.",
+                                        style = MaterialTheme.typography.bodyMedium
+                                    )
+                                    TextButton(onClick = onRetryPagination) {
+                                        Text("Retry")
+                                    }
+                                }
+                            }
+                        }
+                    }
                 }
             }
 
@@ -138,6 +162,12 @@ internal fun SearchScreenContent(
                             style = MaterialTheme.typography.bodyMedium,
                             modifier = Modifier.padding(top = 8.dp)
                         )
+                        Button(
+                            onClick = state.onRetry,
+                            modifier = Modifier.padding(top = 8.dp)
+                        ) {
+                            Text("Retry")
+                        }
                     }
                 }
             }
