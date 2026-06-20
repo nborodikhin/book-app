@@ -174,14 +174,12 @@ class SearchViewModelTest {
         advanceTimeBy(100)
         assertTrue((viewModel.uiState.value as SearchUiState.Success).paginationError)
 
-        // Second attempt: succeed this time
-        val page2 = listOf(SearchResult("OL20W", "Book 20", emptyList(), null))
-        whenever(repository.search("dune", 2)).thenReturn(page2)
-
+        // loadNextPage sets isLoadingMore=true and paginationError=false synchronously
+        // before launching the fetch coroutine — verify that intermediate state
         viewModel.loadNextPage()
-        advanceTimeBy(10) // just after state set to isLoadingMore = true, before fetch completes
 
         val loadingState = viewModel.uiState.value as SearchUiState.Success
+        assertTrue(loadingState.isLoadingMore)
         assertFalse(loadingState.paginationError)
     }
 }
