@@ -4,7 +4,10 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.test.assertIsDisplayed
+import androidx.compose.ui.test.hasSetTextAction
+import androidx.compose.ui.test.hasText
 import androidx.compose.ui.test.junit4.createComposeRule
+import androidx.compose.ui.test.onNode
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performTextInput
 import androidx.test.ext.junit.runners.AndroidJUnit4
@@ -95,7 +98,8 @@ class BookmarksScreenTest {
             }
         }
         composeRule.onNodeWithText("Filter by title or author").performTextInput("Dune")
-        composeRule.onNodeWithText("Dune").assertIsDisplayed()
+        // "Dune" appears in both the TextField input and the list item title — exclude the editable field
+        composeRule.onNode(hasText("Dune") and !hasSetTextAction()).assertIsDisplayed()
         composeRule.onNodeWithText("Foundation").assertDoesNotExist()
     }
 
