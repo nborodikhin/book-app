@@ -230,12 +230,28 @@ private fun SearchSuccessPreview() {
 private fun SearchErrorPreview() {
     BookAppTheme {
         SearchScreenContent(
-            uiState = SearchUiState.Error("Something went wrong. Try searching again."),
+            uiState = SearchUiState.Error("Something went wrong.", onRetry = {}),
             query = "dune",
             onQueryChange = {},
             isBookmarked = { false },
             onBookmarkToggle = { _, _ -> },
             onNavigateToDetail = {}
+        )
+    }
+}
+
+@Preview(showBackground = true)
+@Composable
+private fun SearchPaginationErrorPreview() {
+    BookAppTheme {
+        SearchScreenContent(
+            uiState = SearchUiState.Success(results = fakeResults, paginationError = true),
+            query = "dune",
+            onQueryChange = {},
+            isBookmarked = { false },
+            onBookmarkToggle = { _, _ -> },
+            onNavigateToDetail = {},
+            onRetryPagination = {}
         )
     }
 }
