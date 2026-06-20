@@ -8,8 +8,8 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextField
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
@@ -51,14 +51,14 @@ internal fun BookmarksScreenContent(
     onNavigateToDetail: (String) -> Unit
 ) {
     Column(modifier = Modifier.fillMaxSize()) {
-        TextField(
+        OutlinedTextField(
             value = filterQuery,
             onValueChange = onFilterChange,
             placeholder = { Text("Filter by title or author") },
             singleLine = true,
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(horizontal = 16.dp, vertical = 8.dp)
+                .padding(16.dp)
         )
 
         when {
