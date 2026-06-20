@@ -1,11 +1,14 @@
 package com.example.bookapp.ui.detail
 
+import android.content.Context
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.example.bookapp.R
 import com.example.bookapp.data.local.BookEntity
 import com.example.bookapp.data.repository.BookRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
+import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
@@ -26,7 +29,8 @@ private const val NOTE_MAX_LENGTH = 300
 @HiltViewModel
 class BookDetailViewModel @Inject constructor(
     savedStateHandle: SavedStateHandle,
-    private val repository: BookRepository
+    private val repository: BookRepository,
+    @ApplicationContext private val context: Context
 ) : ViewModel() {
 
     val workId: String = checkNotNull(savedStateHandle["workId"])
@@ -52,7 +56,7 @@ class BookDetailViewModel @Inject constructor(
             _uiState.value = if (detail != null) {
                 DetailUiState.Success(detail)
             } else {
-                DetailUiState.Error("Could not load book details.")
+                DetailUiState.Error(context.getString(R.string.detail_error_message))
             }
         }
     }
