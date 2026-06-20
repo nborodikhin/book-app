@@ -2,6 +2,8 @@
 
 A lightweight Android app for discovering books and maintaining a personal reading list, powered by the [OpenLibrary](https://openlibrary.org) public API. No account required — all personal data stays on device.
 
+https://github.com/user-attachments/assets/48a097f8-ddf0-464d-99b5-707d772122cd
+
 ## Features
 
 **Search tab**
