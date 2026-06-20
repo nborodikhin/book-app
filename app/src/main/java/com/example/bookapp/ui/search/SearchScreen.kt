@@ -262,3 +262,18 @@ private fun SearchPaginationErrorPreview() {
         )
     }
 }
+
+@Preview(showBackground = true)
+@Composable
+private fun SearchEmptyPreview() {
+    BookAppTheme {
+        SearchScreenContent(
+            uiState = SearchUiState.Success(results = emptyList()),
+            query = "obscure query",
+            onQueryChange = {},
+            isBookmarked = { false },
+            onBookmarkToggle = { _, _ -> },
+            onNavigateToDetail = {}
+        )
+    }
+}
