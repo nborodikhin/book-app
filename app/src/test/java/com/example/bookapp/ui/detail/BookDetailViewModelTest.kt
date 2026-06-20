@@ -79,6 +79,23 @@ class BookDetailViewModelTest {
         }
     }
 
+    @Test
+    fun `note starts as null sentinel then resolves to DB value`() = runTest(dispatcher) {
+        whenever(repository.getNote(any())).thenReturn(flowOf(""))
+        whenever(repository.getBookDetail(any())).thenReturn(null)
+
+        val vm = viewModel("OL_NO_NOTE")
+
+        vm.note.test {
+            // StateFlow initial value is the null sentinel — not the DB value
+            assertEquals(null, awaitItem())
+            advanceUntilIdle()
+            // After DB emits, StateFlow resolves to "" — filterNotNull().first() in the screen terminates here
+            assertEquals("", awaitItem())
+            cancelAndIgnoreRemainingEvents()
+        }
+    }
+
     // 10.10 — note capped at 300 chars
     @Test
     fun `note input beyond 300 chars is truncated`() = runTest(dispatcher) {
