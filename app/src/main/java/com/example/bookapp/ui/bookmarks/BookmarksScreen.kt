@@ -14,8 +14,10 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import com.example.bookapp.R
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.example.bookapp.data.local.BookEntity
@@ -54,7 +56,7 @@ internal fun BookmarksScreenContent(
         OutlinedTextField(
             value = filterQuery,
             onValueChange = onFilterChange,
-            placeholder = { Text("Filter by title or author") },
+            placeholder = { Text(stringResource(R.string.bookmarks_filter_placeholder)) },
             singleLine = true,
             modifier = Modifier
                 .fillMaxWidth()
@@ -65,7 +67,7 @@ internal fun BookmarksScreenContent(
             allBooksEmpty -> {
                 Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
                     Text(
-                        text = "No bookmarks yet",
+                        text = stringResource(R.string.bookmarks_empty_no_bookmarks),
                         style = MaterialTheme.typography.bodyLarge,
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
                         modifier = Modifier.padding(16.dp)
@@ -75,7 +77,7 @@ internal fun BookmarksScreenContent(
             books.isEmpty() -> {
                 Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
                     Text(
-                        text = "No results for \"$filterQuery\"",
+                        text = stringResource(R.string.bookmarks_empty_no_results, filterQuery),
                         style = MaterialTheme.typography.bodyLarge,
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
                         modifier = Modifier.padding(16.dp)
