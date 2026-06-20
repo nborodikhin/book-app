@@ -1,3 +1,33 @@
 <resources>
     <string name="app_name">Book App</string>
+
+    <!-- Navigation -->
+    <string name="nav_tab_search">Search</string>
+    <string name="nav_tab_bookmarks">Bookmarks</string>
+
+    <!-- Search screen -->
+    <string name="search_placeholder">Search books by title or author</string>
+    <string name="search_loading_description">Loading</string>
+    <string name="search_empty_no_results">No results</string>
+    <string name="search_pagination_error">Failed to load more.</string>
+    <string name="search_retry_button">Retry</string>
+    <string name="search_error_icon_description">Error</string>
+    <string name="search_error_message">Something went wrong.</string>
+
+    <!-- Bookmarks screen -->
+    <string name="bookmarks_filter_placeholder">Filter by title or author</string>
+    <string name="bookmarks_empty_no_bookmarks">No bookmarks yet</string>
+    <string name="bookmarks_empty_no_results">No results for \"%s\"</string>
+
+    <!-- Book detail screen -->
+    <string name="detail_screen_title">Book Detail</string>
+    <string name="detail_back_button_description">Back</string>
+    <string name="detail_synopsis_fallback">No description available.</string>
+    <string name="detail_note_label">My note</string>
+    <string name="detail_error_message">Could not load book details.</string>
+
+    <!-- Shared: book cover and bookmark -->
+    <string name="book_cover_description">Cover of %s</string>
+    <string name="book_bookmark_add_description">Add bookmark</string>
+    <string name="book_bookmark_remove_description">Remove bookmark</string>
 </resources>
