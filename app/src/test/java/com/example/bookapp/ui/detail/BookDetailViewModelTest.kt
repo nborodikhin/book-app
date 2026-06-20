@@ -1,5 +1,6 @@
 package com.example.bookapp.ui.detail
 
+import android.content.Context
 import androidx.lifecycle.SavedStateHandle
 import app.cash.turbine.test
 import com.example.bookapp.data.local.BookEntity
@@ -44,10 +45,15 @@ class BookDetailViewModelTest {
         Dispatchers.resetMain()
     }
 
-    private fun viewModel(workId: String) = BookDetailViewModel(
-        savedStateHandle = SavedStateHandle(mapOf("workId" to workId)),
-        repository = repository
-    )
+    private fun viewModel(workId: String): BookDetailViewModel {
+        val context = mock<Context>()
+        whenever(context.getString(any())).thenReturn("Could not load book details.")
+        return BookDetailViewModel(
+            savedStateHandle = SavedStateHandle(mapOf("workId" to workId)),
+            repository = repository,
+            context = context
+        )
+    }
 
     // 10.8 — local-first: bookmarked book served from Room without network call
     @Test

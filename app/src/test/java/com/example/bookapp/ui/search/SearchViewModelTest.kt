@@ -1,5 +1,6 @@
 package com.example.bookapp.ui.search
 
+import android.content.Context
 import app.cash.turbine.test
 import com.example.bookapp.data.repository.BookRepository
 import com.example.bookapp.data.repository.SearchResult
@@ -39,7 +40,9 @@ class SearchViewModelTest {
         Dispatchers.setMain(dispatcher)
         repository = mock()
         whenever(repository.isBookmarked(any())).thenReturn(flowOf(false))
-        viewModel = SearchViewModel(repository)
+        val context = mock<Context>()
+        whenever(context.getString(any())).thenReturn("Something went wrong.")
+        viewModel = SearchViewModel(repository, context)
     }
 
     @After
