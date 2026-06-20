@@ -53,7 +53,19 @@ OutlinedTextField(
 )
 ```
 
-`viewModel.note` is `StateFlow<String?>` with an initial value of `null`. Using `filterNotNull().first()` skips the synthetic `null` and suspends until the actual DB emission arrives. Using `""` as the initial value would cause `.first()` to return immediately with an empty string before the persisted note loads.
+`viewModel.note` is `StateFlow<String?>`. Two distinct meanings of `null` must be kept apart:
+- **Sentinel `null`** (initial StateFlow value, `""` would have been swallowed by `.first()` immediately) — means "not yet loaded from DB"
+- **DB `null`** — means "no note row exists for this book" (e.g., a book with no saved note, or one that was just bookmarked)
+
+To prevent `filterNotNull().first()` from hanging forever on a DB `null`, the ViewModel maps the DB value before `stateIn`:
+
+```kotlin
+val note: StateFlow<String?> = repository.getNote(workId)
+    .map { it ?: "" }
+    .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), null)
+```
+
+The upstream `repository.getNote()` may emit `null` (no note in DB). `.map { it ?: "" }` converts that to `""` so the StateFlow only ever holds `null` (sentinel) or a real string. `filterNotNull().first()` then always resolves once the DB emits — even for books with no saved note or for books just being bookmarked for the first time.
 
 This reads the persisted value exactly once on composition, then the screen owns the state. Blocking edits until initialized prevents the user from typing into a stale empty field that would then be overwritten by the arriving value. `rememberSaveable` is not needed — the ViewModel survives configuration changes and holds the current note value, so `LaunchedEffect(Unit)` re-fires on activity recreation and reinitializes `noteText` from the VM.
 
