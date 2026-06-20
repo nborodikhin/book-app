@@ -1,8 +1,5 @@
 package com.example.bookapp.ui.components
 
-import androidx.compose.ui.tooling.preview.Preview
-import androidx.compose.runtime.Composable
-import com.example.bookapp.ui.theme.BookAppTheme
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -25,9 +22,11 @@ import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.tooling.preview.Preview
 import coil.compose.AsyncImage
 import coil.request.ImageRequest
 import com.example.bookapp.R
+import com.example.bookapp.ui.theme.BookAppTheme
 
 @Composable
 fun BookListItem(

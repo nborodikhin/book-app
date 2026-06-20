@@ -70,9 +70,8 @@ fun BookDetailScreen(
         onBack = onBack,
         onToggleBookmark = { viewModel.toggleBookmark() },
         onNoteChange = {
-            val capped = it.take(300)
-            noteText = capped
-            viewModel.onNoteChange(capped)
+            noteText = it
+            viewModel.onNoteChange(it)
         }
     )
 }
@@ -173,7 +172,7 @@ internal fun BookDetailScreenContent(
                                 Spacer(modifier = Modifier.height(16.dp))
                                 OutlinedTextField(
                                     value = noteText,
-                                    onValueChange = onNoteChange,
+                                    onValueChange = { onNoteChange(it.take(300)) },
                                     label = { Text("My note") },
                                     supportingText = { Text("${noteText.length}/300") },
                                     enabled = noteInitialized,

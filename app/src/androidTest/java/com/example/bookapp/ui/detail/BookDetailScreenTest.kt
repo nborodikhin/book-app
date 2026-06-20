@@ -1,5 +1,8 @@
 package com.example.bookapp.ui.detail
 
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.assertIsNotDisplayed
 import androidx.compose.ui.test.junit4.createComposeRule
@@ -82,7 +85,7 @@ class BookDetailScreenTest {
 
     @Test
     fun characterCounterUpdatesAsTextChanges() {
-        var note = ""
+        var note by mutableStateOf("")
         composeRule.setContent {
             BookAppTheme {
                 BookDetailScreenContent(
@@ -103,7 +106,7 @@ class BookDetailScreenTest {
 
     @Test
     fun inputCappedAt300Characters() {
-        var note = ""
+        var note by mutableStateOf("")
         composeRule.setContent {
             BookAppTheme {
                 BookDetailScreenContent(

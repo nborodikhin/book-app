@@ -2,6 +2,7 @@ package com.example.bookapp.ui.search
 
 import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.junit4.createComposeRule
+import androidx.compose.ui.test.onAllNodesWithContentDescription
 import androidx.compose.ui.test.onNodeWithContentDescription
 import androidx.compose.ui.test.onNodeWithText
 import androidx.test.ext.junit.runners.AndroidJUnit4
@@ -105,6 +106,6 @@ class SearchScreenTest {
                 )
             }
         }
-        composeRule.onNodeWithContentDescription("Add bookmark").assertIsDisplayed()
+        composeRule.onAllNodesWithContentDescription("Add bookmark")[0].assertIsDisplayed()
     }
 }
