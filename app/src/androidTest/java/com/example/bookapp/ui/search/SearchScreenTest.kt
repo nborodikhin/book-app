@@ -80,6 +80,23 @@ class SearchScreenTest {
     }
 
     @Test
+    fun emptyResultsShowsNoResultsMessage() {
+        composeRule.setContent {
+            BookAppTheme {
+                SearchScreenContent(
+                    uiState = SearchUiState.Success(results = emptyList()),
+                    query = "obscure query",
+                    onQueryChange = {},
+                    isBookmarked = { false },
+                    onBookmarkToggle = { _, _ -> },
+                    onNavigateToDetail = {}
+                )
+            }
+        }
+        composeRule.onNodeWithText("No results").assertIsDisplayed()
+    }
+
+    @Test
     fun paginationErrorShowsInlineBannerAndRetryButton() {
         var retryPaginationClicked = false
         composeRule.setContent {
