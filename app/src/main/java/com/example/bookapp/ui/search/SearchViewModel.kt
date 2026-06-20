@@ -8,6 +8,7 @@ import com.example.bookapp.data.repository.BookRepository
 import com.example.bookapp.data.repository.SearchResult
 import dagger.hilt.android.lifecycle.HiltViewModel
 import dagger.hilt.android.qualifiers.ApplicationContext
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.FlowPreview
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -101,6 +102,8 @@ class SearchViewModel @Inject constructor(
             accumulatedResults.addAll(results)
             currentPage = page
             _uiState.value = SearchUiState.Success(accumulatedResults.toList())
+        } catch (e: CancellationException) {
+            throw e
         } catch (e: Exception) {
             if (page == 1) {
                 _uiState.value = SearchUiState.Error(context.getString(R.string.search_error_message), ::retrySearch)

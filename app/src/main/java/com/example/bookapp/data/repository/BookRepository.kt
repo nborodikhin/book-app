@@ -9,6 +9,7 @@ import com.example.bookapp.data.local.BookDao
 import com.example.bookapp.data.local.BookEntity
 import com.example.bookapp.data.network.OpenLibraryApi
 import com.example.bookapp.data.network.models.SearchDoc
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flatMapLatest
@@ -61,6 +62,8 @@ class BookRepository @Inject constructor(
             )
             bookDao.insert(entity)
             bookDao.getBook(workId)
+        } catch (e: CancellationException) {
+            throw e
         } catch (e: Exception) {
             null
         }
@@ -91,6 +94,8 @@ class BookRepository @Inject constructor(
                         coverUrl = detail.coverUrl() ?: coverUrl
                     )
                     bookDao.insert(entity)
+                } catch (e: CancellationException) {
+                    throw e
                 } catch (e: Exception) {
                     // store with search metadata if network fails
                     bookDao.insert(
