@@ -20,6 +20,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.tooling.preview.Preview
@@ -52,7 +53,7 @@ fun BookListItem(
                 .error(R.drawable.ic_error_image)
                 .crossfade(true)
                 .build(),
-            contentDescription = "Cover of $title",
+            contentDescription = stringResource(R.string.book_cover_description, title),
             contentScale = ContentScale.Crop,
             modifier = Modifier.size(56.dp, 80.dp)
         )
@@ -77,7 +78,7 @@ fun BookListItem(
         IconButton(onClick = onBookmarkToggle) {
             Icon(
                 imageVector = if (isBookmarked) Icons.Filled.Bookmark else Icons.Outlined.BookmarkBorder,
-                contentDescription = if (isBookmarked) "Remove bookmark" else "Add bookmark",
+                contentDescription = if (isBookmarked) stringResource(R.string.book_bookmark_remove_description) else stringResource(R.string.book_bookmark_add_description),
                 tint = MaterialTheme.colorScheme.primary
             )
         }
