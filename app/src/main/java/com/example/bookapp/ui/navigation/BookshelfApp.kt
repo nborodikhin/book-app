@@ -2,7 +2,9 @@ package com.example.bookapp.ui.navigation
 
 import androidx.compose.foundation.layout.padding
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.stringResource
 import androidx.compose.material.icons.Icons
+import com.example.bookapp.R
 import androidx.compose.material.icons.filled.Bookmarks
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material3.Icon
@@ -60,7 +62,7 @@ fun BookshelfApp() {
                                 )
                             },
                             label = {
-                                Text(if (tab is Route.Search) "Search" else "Bookmarks")
+                                Text(if (tab is Route.Search) stringResource(R.string.nav_tab_search) else stringResource(R.string.nav_tab_bookmarks))
                             }
                         )
                     }
