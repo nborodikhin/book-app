@@ -1,10 +1,13 @@
 package com.example.bookapp.ui.search
 
+import android.content.Context
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.example.bookapp.R
 import com.example.bookapp.data.repository.BookRepository
 import com.example.bookapp.data.repository.SearchResult
 import dagger.hilt.android.lifecycle.HiltViewModel
+import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.FlowPreview
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -28,7 +31,8 @@ sealed interface SearchUiState {
 
 @HiltViewModel
 class SearchViewModel @Inject constructor(
-    private val repository: BookRepository
+    private val repository: BookRepository,
+    @ApplicationContext private val context: Context
 ) : ViewModel() {
 
     val searchQuery = MutableStateFlow("")
@@ -99,7 +103,7 @@ class SearchViewModel @Inject constructor(
             _uiState.value = SearchUiState.Success(accumulatedResults.toList())
         } catch (e: Exception) {
             if (page == 1) {
-                _uiState.value = SearchUiState.Error("Something went wrong.", ::retrySearch)
+                _uiState.value = SearchUiState.Error(context.getString(R.string.search_error_message), ::retrySearch)
             } else {
                 val current = _uiState.value
                 val existing = if (current is SearchUiState.Success) current.results else accumulatedResults.toList()
