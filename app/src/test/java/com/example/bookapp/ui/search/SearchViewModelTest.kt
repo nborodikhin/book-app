@@ -15,6 +15,8 @@ import kotlinx.coroutines.test.runTest
 import kotlinx.coroutines.test.setMain
 import org.junit.After
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertFalse
+import org.junit.Assert.assertNotNull
 import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Test
@@ -113,5 +115,73 @@ class SearchViewModelTest {
 
         val state = viewModel.uiState.value
         assertTrue(state is SearchUiState.Error)
+    }
+
+    @Test
+    fun `initial search error state carries non-null onRetry`() = runTest(dispatcher) {
+        whenever(repository.search(any(), any())).thenThrow(RuntimeException("Network error"))
+
+        viewModel.searchQuery.value = "dune"
+        advanceTimeBy(2100)
+
+        val state = viewModel.uiState.value as SearchUiState.Error
+        assertNotNull(state.onRetry)
+    }
+
+    @Test
+    fun `retrySearch transitions back to Loading then Success`() = runTest(dispatcher) {
+        val fakeResults = listOf(SearchResult("OL1W", "Dune", listOf("Frank Herbert"), null))
+        whenever(repository.search(any(), any()))
+            .thenThrow(RuntimeException("Network error"))
+            .thenReturn(fakeResults)
+
+        viewModel.searchQuery.value = "dune"
+        advanceTimeBy(2100)
+        assertTrue(viewModel.uiState.value is SearchUiState.Error)
+
+        viewModel.retrySearch()
+        advanceTimeBy(100)
+
+        assertTrue(viewModel.uiState.value is SearchUiState.Success)
+    }
+
+    @Test
+    fun `pagination error keeps existing results and sets paginationError flag`() = runTest(dispatcher) {
+        val page1 = List(20) { SearchResult("OL${it}W", "Book $it", emptyList(), null) }
+        whenever(repository.search("dune", 1)).thenReturn(page1)
+        whenever(repository.search("dune", 2)).thenThrow(RuntimeException("Network error"))
+
+        viewModel.searchQuery.value = "dune"
+        advanceTimeBy(2100)
+
+        viewModel.loadNextPage()
+        advanceTimeBy(100)
+
+        val state = viewModel.uiState.value as SearchUiState.Success
+        assertEquals(20, state.results.size)
+        assertTrue(state.paginationError)
+    }
+
+    @Test
+    fun `loadNextPage after pagination error clears paginationError and sets isLoadingMore`() = runTest(dispatcher) {
+        val page1 = List(20) { SearchResult("OL${it}W", "Book $it", emptyList(), null) }
+        whenever(repository.search("dune", 1)).thenReturn(page1)
+        whenever(repository.search("dune", 2)).thenThrow(RuntimeException("Network error"))
+
+        viewModel.searchQuery.value = "dune"
+        advanceTimeBy(2100)
+        viewModel.loadNextPage()
+        advanceTimeBy(100)
+        assertTrue((viewModel.uiState.value as SearchUiState.Success).paginationError)
+
+        // Second attempt: succeed this time
+        val page2 = listOf(SearchResult("OL20W", "Book 20", emptyList(), null))
+        whenever(repository.search("dune", 2)).thenReturn(page2)
+
+        viewModel.loadNextPage()
+        advanceTimeBy(10) // just after state set to isLoadingMore = true, before fetch completes
+
+        val loadingState = viewModel.uiState.value as SearchUiState.Success
+        assertFalse(loadingState.paginationError)
     }
 }
