@@ -33,6 +33,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
@@ -91,10 +92,10 @@ internal fun BookDetailScreenContent(
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text("Book Detail") },
+                title = { Text(stringResource(R.string.detail_screen_title)) },
                 navigationIcon = {
                     IconButton(onClick = onBack) {
-                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back")
+                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = stringResource(R.string.detail_back_button_description))
                     }
                 }
             )
@@ -147,7 +148,7 @@ internal fun BookDetailScreenContent(
                                     .error(R.drawable.ic_error_image)
                                     .crossfade(true)
                                     .build(),
-                                contentDescription = "Cover of ${book.title}",
+                                contentDescription = stringResource(R.string.book_cover_description, book.title),
                                 contentScale = ContentScale.Crop,
                                 modifier = Modifier.fillMaxSize()
                             )
@@ -165,7 +166,7 @@ internal fun BookDetailScreenContent(
                             }
                             Spacer(modifier = Modifier.height(12.dp))
                             Text(
-                                text = book.synopsis.ifBlank { "No description available." },
+                                text = book.synopsis.ifBlank { stringResource(R.string.detail_synopsis_fallback) },
                                 style = MaterialTheme.typography.bodyMedium
                             )
 
@@ -174,7 +175,7 @@ internal fun BookDetailScreenContent(
                                 OutlinedTextField(
                                     value = noteText,
                                     onValueChange = { onNoteChange(it.take(300)) },
-                                    label = { Text("My note") },
+                                    label = { Text(stringResource(R.string.detail_note_label)) },
                                     supportingText = { Text("${noteText.length}/300") },
                                     enabled = noteInitialized,
                                     modifier = Modifier.fillMaxWidth(),
@@ -192,7 +193,7 @@ internal fun BookDetailScreenContent(
                     ) {
                         Icon(
                             imageVector = if (isBookmarked) Icons.Filled.Bookmark else Icons.Outlined.BookmarkBorder,
-                            contentDescription = if (isBookmarked) "Remove bookmark" else "Add bookmark",
+                            contentDescription = if (isBookmarked) stringResource(R.string.book_bookmark_remove_description) else stringResource(R.string.book_bookmark_add_description),
                             tint = MaterialTheme.colorScheme.primary
                         )
                     }
