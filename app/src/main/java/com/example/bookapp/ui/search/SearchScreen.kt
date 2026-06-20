@@ -23,11 +23,13 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Alignment
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import com.example.bookapp.R
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.example.bookapp.data.repository.SearchResult
@@ -85,7 +87,7 @@ internal fun SearchScreenContent(
         OutlinedTextField(
             value = query,
             onValueChange = onQueryChange,
-            placeholder = { Text("Search books by title or author") },
+            placeholder = { Text(stringResource(R.string.search_placeholder)) },
             singleLine = true,
             modifier = Modifier
                 .fillMaxWidth()
@@ -97,14 +99,15 @@ internal fun SearchScreenContent(
 
             is SearchUiState.Loading -> {
                 Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                    CircularProgressIndicator(modifier = Modifier.semantics { contentDescription = "Loading" })
+                    val loadingDescription = stringResource(R.string.search_loading_description)
+                    CircularProgressIndicator(modifier = Modifier.semantics { contentDescription = loadingDescription })
                 }
             }
 
             is SearchUiState.Success -> if (state.results.isEmpty()) {
                 Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
                     Text(
-                        text = "No results",
+                        text = stringResource(R.string.search_empty_no_results),
                         style = MaterialTheme.typography.bodyMedium
                     )
                 }
@@ -143,11 +146,11 @@ internal fun SearchScreenContent(
                             ) {
                                 Column(horizontalAlignment = Alignment.CenterHorizontally) {
                                     Text(
-                                        text = "Failed to load more.",
+                                        text = stringResource(R.string.search_pagination_error),
                                         style = MaterialTheme.typography.bodyMedium
                                     )
                                     TextButton(onClick = onRetryPagination) {
-                                        Text("Retry")
+                                        Text(stringResource(R.string.search_retry_button))
                                     }
                                 }
                             }
@@ -161,7 +164,7 @@ internal fun SearchScreenContent(
                     Column(horizontalAlignment = Alignment.CenterHorizontally) {
                         Icon(
                             imageVector = Icons.Default.ErrorOutline,
-                            contentDescription = "Error",
+                            contentDescription = stringResource(R.string.search_error_icon_description),
                             tint = MaterialTheme.colorScheme.error
                         )
                         Text(
@@ -173,7 +176,7 @@ internal fun SearchScreenContent(
                             onClick = state.onRetry,
                             modifier = Modifier.padding(top = 8.dp)
                         ) {
-                            Text("Retry")
+                            Text(stringResource(R.string.search_retry_button))
                         }
                     }
                 }
