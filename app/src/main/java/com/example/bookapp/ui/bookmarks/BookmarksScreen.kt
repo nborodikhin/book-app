@@ -1,12 +1,15 @@
 package com.example.bookapp.ui.bookmarks
 
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextField
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
@@ -24,10 +27,15 @@ fun BookmarksScreen(
     onNavigateToDetail: (String) -> Unit,
     viewModel: BookmarksViewModel = hiltViewModel()
 ) {
-    val books by viewModel.bookmarkedBooks.collectAsStateWithLifecycle()
+    val books by viewModel.filteredBooks.collectAsStateWithLifecycle()
+    val allBooks by viewModel.bookmarkedBooks.collectAsStateWithLifecycle()
+    val filterQuery by viewModel.filterQuery.collectAsStateWithLifecycle()
 
     BookmarksScreenContent(
         books = books,
+        allBooksEmpty = allBooks.isEmpty(),
+        filterQuery = filterQuery,
+        onFilterChange = viewModel::updateFilter,
         onToggleBookmark = { book -> viewModel.toggleBookmark(book, currentlyBookmarked = true) },
         onNavigateToDetail = onNavigateToDetail
     )
@@ -36,29 +44,57 @@ fun BookmarksScreen(
 @Composable
 internal fun BookmarksScreenContent(
     books: List<BookEntity>,
+    allBooksEmpty: Boolean,
+    filterQuery: String,
+    onFilterChange: (String) -> Unit,
     onToggleBookmark: (BookEntity) -> Unit,
     onNavigateToDetail: (String) -> Unit
 ) {
-    if (books.isEmpty()) {
-        Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-            Text(
-                text = "No bookmarks yet",
-                style = MaterialTheme.typography.bodyLarge,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
-                modifier = Modifier.padding(16.dp)
-            )
-        }
-    } else {
-        LazyColumn(modifier = Modifier.fillMaxSize()) {
-            items(books, key = { it.workId }) { book ->
-                BookListItem(
-                    title = book.title,
-                    authors = book.authors,
-                    coverUrl = book.coverUrl,
-                    isBookmarked = true,
-                    onBookmarkToggle = { onToggleBookmark(book) },
-                    onClick = { onNavigateToDetail(book.workId) }
-                )
+    Column(modifier = Modifier.fillMaxSize()) {
+        TextField(
+            value = filterQuery,
+            onValueChange = onFilterChange,
+            placeholder = { Text("Filter by title or author") },
+            singleLine = true,
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 16.dp, vertical = 8.dp)
+        )
+
+        when {
+            allBooksEmpty -> {
+                Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                    Text(
+                        text = "No bookmarks yet",
+                        style = MaterialTheme.typography.bodyLarge,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        modifier = Modifier.padding(16.dp)
+                    )
+                }
+            }
+            books.isEmpty() -> {
+                Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                    Text(
+                        text = "No results for \"$filterQuery\"",
+                        style = MaterialTheme.typography.bodyLarge,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        modifier = Modifier.padding(16.dp)
+                    )
+                }
+            }
+            else -> {
+                LazyColumn(modifier = Modifier.fillMaxSize()) {
+                    items(books, key = { it.workId }) { book ->
+                        BookListItem(
+                            title = book.title,
+                            authors = book.authors,
+                            coverUrl = book.coverUrl,
+                            isBookmarked = true,
+                            onBookmarkToggle = { onToggleBookmark(book) },
+                            onClick = { onNavigateToDetail(book.workId) }
+                        )
+                    }
+                }
             }
         }
     }
@@ -70,6 +106,24 @@ private fun BookmarksEmptyPreview() {
     BookAppTheme {
         BookmarksScreenContent(
             books = emptyList(),
+            allBooksEmpty = true,
+            filterQuery = "",
+            onFilterChange = {},
+            onToggleBookmark = {},
+            onNavigateToDetail = {}
+        )
+    }
+}
+
+@Preview(showBackground = true)
+@Composable
+private fun BookmarksNoResultsPreview() {
+    BookAppTheme {
+        BookmarksScreenContent(
+            books = emptyList(),
+            allBooksEmpty = false,
+            filterQuery = "xyz",
+            onFilterChange = {},
             onToggleBookmark = {},
             onNavigateToDetail = {}
         )
@@ -85,6 +139,9 @@ private fun BookmarksNonEmptyPreview() {
                 BookEntity(workId = "OL1W", title = "Dune", authors = "Frank Herbert", synopsis = "", coverUrl = null),
                 BookEntity(workId = "OL2W", title = "Foundation", authors = "Isaac Asimov", synopsis = "", coverUrl = null)
             ),
+            allBooksEmpty = false,
+            filterQuery = "",
+            onFilterChange = {},
             onToggleBookmark = {},
             onNavigateToDetail = {}
         )
