@@ -5,7 +5,9 @@ import androidx.compose.ui.test.junit4.createComposeRule
 import androidx.compose.ui.test.onAllNodesWithContentDescription
 import androidx.compose.ui.test.onNodeWithContentDescription
 import androidx.compose.ui.test.onNodeWithText
+import androidx.compose.ui.test.performClick
 import androidx.test.ext.junit.runners.AndroidJUnit4
+import org.junit.Assert.assertTrue
 import com.example.bookapp.data.repository.SearchResult
 import com.example.bookapp.ui.theme.BookAppTheme
 import org.junit.Rule
@@ -45,7 +47,7 @@ class SearchScreenTest {
         composeRule.setContent {
             BookAppTheme {
                 SearchScreenContent(
-                    uiState = SearchUiState.Error("Something went wrong. Try searching again."),
+                    uiState = SearchUiState.Error("Something went wrong.", onRetry = {}),
                     query = "dune",
                     onQueryChange = {},
                     isBookmarked = { false },
@@ -54,7 +56,49 @@ class SearchScreenTest {
                 )
             }
         }
-        composeRule.onNodeWithText("Something went wrong. Try searching again.").assertIsDisplayed()
+        composeRule.onNodeWithText("Something went wrong.").assertIsDisplayed()
+    }
+
+    @Test
+    fun errorStateShowsRetryButtonAndItIsClickable() {
+        var retryClicked = false
+        composeRule.setContent {
+            BookAppTheme {
+                SearchScreenContent(
+                    uiState = SearchUiState.Error("Something went wrong.", onRetry = { retryClicked = true }),
+                    query = "dune",
+                    onQueryChange = {},
+                    isBookmarked = { false },
+                    onBookmarkToggle = { _, _ -> },
+                    onNavigateToDetail = {}
+                )
+            }
+        }
+        composeRule.onNodeWithText("Retry").assertIsDisplayed()
+        composeRule.onNodeWithText("Retry").performClick()
+        assertTrue(retryClicked)
+    }
+
+    @Test
+    fun paginationErrorShowsInlineBannerAndRetryButton() {
+        var retryPaginationClicked = false
+        composeRule.setContent {
+            BookAppTheme {
+                SearchScreenContent(
+                    uiState = SearchUiState.Success(results = fakeResults, paginationError = true),
+                    query = "dune",
+                    onQueryChange = {},
+                    isBookmarked = { false },
+                    onBookmarkToggle = { _, _ -> },
+                    onNavigateToDetail = {},
+                    onRetryPagination = { retryPaginationClicked = true }
+                )
+            }
+        }
+        composeRule.onNodeWithText("Failed to load more.").assertIsDisplayed()
+        composeRule.onNodeWithText("Retry").assertIsDisplayed()
+        composeRule.onNodeWithText("Retry").performClick()
+        assertTrue(retryPaginationClicked)
     }
 
     @Test
