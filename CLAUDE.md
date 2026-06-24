@@ -38,6 +38,10 @@ Never use `catch (e: Exception)` alone in a suspend function — it swallows `Ca
 
 This applies to every `try/catch` inside a `suspend fun`, regardless of whether the catch has intentional fallback logic.
 
+## Lint
+
+Run `./gradlew lint` before merging any change. The project uses a committed `app/lint-baseline.xml` to suppress pre-existing warnings — only new violations above the baseline will fail the build. To update the baseline after intentionally fixing or introducing a suppressed issue, delete `lint-baseline.xml` and re-run lint to regenerate it.
+
 ## Commits
 
 Create a git commit after every completed task. Keep commit messages concise and focused on what the task accomplished.
