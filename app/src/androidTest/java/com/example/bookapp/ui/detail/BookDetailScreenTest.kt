@@ -6,7 +6,9 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.assertIsNotDisplayed
 import androidx.compose.ui.test.junit4.createComposeRule
+import androidx.compose.ui.test.onNodeWithContentDescription
 import androidx.compose.ui.test.onNodeWithText
+import androidx.compose.ui.test.performClick
 import androidx.compose.ui.test.performTextInput
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import com.example.bookapp.data.local.BookEntity
@@ -122,6 +124,27 @@ class BookDetailScreenTest {
         }
         composeRule.onNodeWithText("My note").performTextInput("A".repeat(310))
         composeRule.onNodeWithText("300/300").assertIsDisplayed()
+    }
+
+    @Test
+    fun bookmarkIconTogglesOnTap() {
+        var isBookmarked by mutableStateOf(false)
+        composeRule.setContent {
+            BookAppTheme {
+                BookDetailScreenContent(
+                    uiState = DetailUiState.Success(sampleBook),
+                    isBookmarked = isBookmarked,
+                    noteText = "",
+                    noteInitialized = true,
+                    onBack = {},
+                    onToggleBookmark = { isBookmarked = !isBookmarked },
+                    onNoteChange = {}
+                )
+            }
+        }
+        composeRule.onNodeWithContentDescription("Add bookmark").assertIsDisplayed()
+        composeRule.onNodeWithContentDescription("Add bookmark").performClick()
+        composeRule.onNodeWithContentDescription("Remove bookmark").assertIsDisplayed()
     }
 
     @Test

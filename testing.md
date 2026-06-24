@@ -54,7 +54,7 @@ Keep this runbook in sync with implementation. When a scenario changes, update t
 - `[automated]` Note initializes from the first ViewModel emission (null sentinel → real value)
 - `[automated]` toggleBookmark(true) calls repository.setBookmarked with bookmarked=true
 - `[automated]` toggleBookmark(false) calls repository.setBookmarked with bookmarked=false
-- `[manual]` Tap the bookmark icon — confirm it toggles between filled and outline states
+- `[automated]` Tapping the bookmark icon toggles it from outline ("Add bookmark") to filled ("Remove bookmark")
 - `[manual]` Bookmark a book, type a note, then scroll down — confirm the bookmark icon remains visible at the top-end corner (not scrolled off screen)
 - `[manual]` Bookmark a book, type a note, then rotate the device — confirm the note text is preserved after rotation
 - `[manual]` Navigate back from BookDetailScreen while a note is unsaved — confirm the note is retained when returning to the screen
