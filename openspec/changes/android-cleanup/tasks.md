@@ -27,11 +27,11 @@
 
 ## 6. Spec Maintenance Notes
 
-- [ ] 6.1 Confirm all six delta spec files in `openspec/changes/android-cleanup/specs/` are complete and correctly formatted
-- [ ] 6.2 Commit all planning artifacts (proposal, design, specs, tasks)
+- [x] 6.1 Confirm all six delta spec files in `openspec/changes/android-cleanup/specs/` are complete and correctly formatted
+- [x] 6.2 Commit all planning artifacts (proposal, design, specs, tasks)
 
 ## 7. Final Verification
 
-- [ ] 7.1 Run `./gradlew lint test` — all checks green
-- [ ] 7.2 Run `./gradlew connectedAndroidTest` — all instrumentation tests pass
+- [x] 7.1 Run `./gradlew lint test` — all checks green
+- [x] 7.2 Run `./gradlew connectedAndroidTest` — all instrumentation tests pass
 - [ ] 7.3 Run `/opsx:verify` to confirm implementation matches specs before archiving
