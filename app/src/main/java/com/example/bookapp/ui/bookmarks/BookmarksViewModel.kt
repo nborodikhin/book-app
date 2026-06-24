@@ -43,7 +43,7 @@ class BookmarksViewModel @Inject constructor(
                 workId = book.workId,
                 bookmarked = !currentlyBookmarked,
                 title = book.title,
-                authors = book.authors.split(", ").filter { it.isNotBlank() },
+                authors = book.authorList,
                 coverUrl = book.coverUrl
             )
         }

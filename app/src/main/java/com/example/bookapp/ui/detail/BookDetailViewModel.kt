@@ -70,7 +70,7 @@ class BookDetailViewModel @Inject constructor(
                 workId = workId,
                 bookmarked = !current,
                 title = book?.title ?: "",
-                authors = book?.authors?.split(", ")?.filter { it.isNotBlank() } ?: emptyList(),
+                authors = book?.authorList ?: emptyList(),
                 coverUrl = book?.coverUrl
             )
         }
@@ -78,7 +78,6 @@ class BookDetailViewModel @Inject constructor(
 
     // 8.3 — enforce 300-char max and auto-save
     fun onNoteChange(newNote: String) {
-        val trimmed = if (newNote.length > NOTE_MAX_LENGTH) newNote.take(NOTE_MAX_LENGTH) else newNote
-        viewModelScope.launch { repository.setNote(workId, trimmed) }
+        viewModelScope.launch { repository.setNote(workId, newNote.take(NOTE_MAX_LENGTH)) }
     }
 }

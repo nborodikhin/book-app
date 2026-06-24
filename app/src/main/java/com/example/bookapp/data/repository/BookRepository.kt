@@ -9,13 +9,13 @@ import com.example.bookapp.data.local.BookDao
 import com.example.bookapp.data.local.BookEntity
 import com.example.bookapp.data.network.OpenLibraryApi
 import com.example.bookapp.data.network.models.SearchDoc
+import com.example.bookapp.data.network.models.WorkDetailResponse
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.flow.map
-import kotlinx.coroutines.flow.combine
 import javax.inject.Inject
 import javax.inject.Singleton
 
@@ -84,30 +84,23 @@ class BookRepository @Inject constructor(
             }
             // fetch and store work detail if not already in Room
             if (bookDao.getBook(workId) == null) {
+                var detail: WorkDetailResponse? = null
                 try {
-                    val detail = api.getWork(workId)
-                    val entity = BookEntity(
-                        workId = workId,
-                        title = detail.title.ifBlank { title },
-                        authors = authors.joinToString(", "),
-                        synopsis = detail.synopsis(),
-                        coverUrl = detail.coverUrl() ?: coverUrl
-                    )
-                    bookDao.insert(entity)
+                    detail = api.getWork(workId)
                 } catch (e: CancellationException) {
                     throw e
-                } catch (e: Exception) {
-                    // store with search metadata if network fails
-                    bookDao.insert(
-                        BookEntity(
-                            workId = workId,
-                            title = title,
-                            authors = authors.joinToString(", "),
-                            synopsis = "",
-                            coverUrl = coverUrl
-                        )
-                    )
+                } catch (_: Exception) {
+                    // fallback to search metadata below
                 }
+                bookDao.insert(
+                    BookEntity(
+                        workId = workId,
+                        title = detail?.title?.ifBlank { title } ?: title,
+                        authors = authors.joinToString(", "),
+                        synopsis = detail?.synopsis() ?: "",
+                        coverUrl = detail?.coverUrl() ?: coverUrl
+                    )
+                )
             }
         } else {
             dataStore.edit { prefs ->

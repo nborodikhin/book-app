@@ -15,7 +15,6 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.debounce
-import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
@@ -54,7 +53,6 @@ class SearchViewModel @Inject constructor(
         viewModelScope.launch {
             searchQuery
                 .debounce(2000L)
-                .distinctUntilChanged()
                 .collect { query ->
                     if (query.isBlank()) {
                         accumulatedResults.clear()

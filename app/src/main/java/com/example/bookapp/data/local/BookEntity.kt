@@ -10,4 +10,6 @@ data class BookEntity(
     val authors: String,
     val synopsis: String,
     val coverUrl: String?
-)
+) {
+    val authorList: List<String> get() = authors.split(", ").filter { it.isNotBlank() }
+}
