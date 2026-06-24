@@ -7,31 +7,22 @@ Defines requirements for the manual testing runbook (`testing.md`), including it
 ## Requirements
 
 ### Requirement: A manual testing runbook exists at testing.md
-The repository SHALL contain a `testing.md` file at the root that lists, as an unchecked Markdown checklist, only the user-visible scenarios that are NOT covered by automated tests. The runbook SHALL NOT list automated scenarios — automated coverage is implicit (run `./gradlew test connectedAndroidTest`). The runbook SHALL be organized by screen or feature area.
+The repository SHALL contain a `testing.md` file at the root that documents, as a structured Markdown checklist, all user-visible scenarios that are not covered by automated unit or instrumentation tests. The runbook SHALL be organized by feature area and SHALL clearly distinguish manual-only steps from steps that have automated coverage.
 
-#### Scenario: testing.md is present in the repo
-- **WHEN** a developer clones the repository
-- **THEN** `testing.md` is present at the repo root and contains at least one manual checklist item
+The runbook SHALL contain exactly the following two manual items and no others:
 
-#### Scenario: Runbook covers scroll-anchor behavior
-- **WHEN** a developer opens testing.md
-- **THEN** they find a checklist item for verifying the bookmark icon remains visible after scrolling on BookDetailScreen
+1. **Cover image loading** — Open a book that has a cover image; confirm the cover loads from the Open Library CDN. (Cannot be automated: requires real external URL and Coil network stack.)
+2. **Device rotation with note open** — Rotate the device while the note field is open on BookDetailScreen; confirm the note text is preserved after rotation. (Not automated: `ActivityScenario.recreate()` is flaky in CI.)
 
-#### Scenario: Runbook covers end-to-end bookmark lifecycle
-- **WHEN** a developer opens testing.md
-- **THEN** they find checklist steps for: searching for a book → bookmarking it → verifying it appears in Bookmarks → adding a note → unbookmarking → verifying the note is cleared and the book is removed from Bookmarks
+All other scenarios previously listed as manual SHALL be covered by `BookshelfIntegrationTest` and removed from the runbook.
 
-#### Scenario: Runbook covers configuration-change note persistence
-- **WHEN** a developer opens testing.md
-- **THEN** they find a checklist item for rotating the device while a note is being typed on BookDetailScreen and verifying the note text is preserved
+#### Scenario: testing.md contains exactly two manual items after this change
+- **WHEN** a developer reads `testing.md` after this change is applied
+- **THEN** the manual checklist contains exactly two unchecked items: cover image loading and device rotation
 
-#### Scenario: Runbook covers network error and retry flows
-- **WHEN** a developer opens testing.md
-- **THEN** they find checklist items for: disabling network during a search, verifying the error message and Retry button appear, re-enabling network and tapping Retry, verifying results load
-
-#### Scenario: Runbook covers cover image loading
-- **WHEN** a developer opens testing.md
-- **THEN** they find a checklist item confirming cover images load from the Open Library CDN for books that have a cover ID
+#### Scenario: Newly automated scenarios are not listed as manual
+- **WHEN** a developer reads `testing.md`
+- **THEN** search error/retry, pagination, bookmark lifecycle, tab switching, and back navigation are NOT listed as manual items
 
 ### Requirement: testing.md and automated tests are kept in sync with implementation
 Whenever implementation changes affect a scenario listed in `testing.md` or the automated test suites, the corresponding runbook item and/or test SHALL be updated in the same commit or PR. This is a normative requirement that applies to all changes touching `SearchScreen`, `BookDetailScreen`, `BookmarksScreen`, `BookRepository`, or any of their ViewModels.
