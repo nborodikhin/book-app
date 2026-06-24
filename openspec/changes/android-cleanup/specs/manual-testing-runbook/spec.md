@@ -1,7 +1,7 @@
 ## ADDED Requirements
 
 ### Requirement: A manual testing runbook exists at testing.md
-The repository SHALL contain a `testing.md` file at the root that documents, as a structured Markdown checklist, all user-visible scenarios that are not covered by automated unit or instrumentation tests. The runbook SHALL be organized by feature area and SHALL clearly distinguish manual-only steps from steps that have automated coverage.
+The repository SHALL contain a `testing.md` file at the root that lists, as an unchecked Markdown checklist, only the user-visible scenarios that are NOT covered by automated tests. The runbook SHALL NOT list automated scenarios — automated coverage is implicit (run `./gradlew test connectedAndroidTest`). The runbook SHALL be organized by screen or feature area.
 
 #### Scenario: testing.md is present in the repo
 - **WHEN** a developer clones the repository

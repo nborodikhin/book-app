@@ -1,14 +1,14 @@
 ## ADDED Requirements
 
-### Requirement: Lint is configured with a baseline and abortOnError in release builds
-`app/build.gradle.kts` SHALL include a `lint {}` block that sets `baseline = file("lint-baseline.xml")` and `abortOnError = true`, scoped to the `release` buildType. A `lint-baseline.xml` SHALL be committed to the repo capturing any pre-existing lint issues at the time of first configuration.
+### Requirement: Lint is configured with a baseline and abortOnError across all build types
+`app/build.gradle.kts` SHALL include a `lint {}` block that sets `baseline = file("lint-baseline.xml")` and `abortOnError = true` (applied globally to all build variants, because AGP does not support per-variant `abortOnError` in the `lint {}` block). A `lint-baseline.xml` SHALL be committed to the repo capturing any pre-existing lint issues at the time of first configuration.
 
 #### Scenario: Lint passes on clean baseline
 - **WHEN** `./gradlew lint` is run with no code changes after baseline generation
 - **THEN** the lint task exits with code 0 and reports no new issues above the baseline
 
-#### Scenario: New lint issue causes release build lint to fail
-- **WHEN** a new lint violation is introduced in production code and `./gradlew lintRelease` is run
+#### Scenario: New lint issue causes lint to fail
+- **WHEN** a new lint violation is introduced in production code and `./gradlew lint` is run
 - **THEN** the lint task exits with a non-zero code and reports the new violation
 
 #### Scenario: Baseline suppresses pre-existing issues

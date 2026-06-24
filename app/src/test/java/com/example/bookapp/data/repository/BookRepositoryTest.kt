@@ -90,6 +90,16 @@ class BookRepositoryTest {
         verify(bookDao).insert(org.mockito.kotlin.argThat { authors == "Frank Herbert" })
     }
 
+    @Test
+    fun `getBookDetail returns null when network call throws`() = testScope.runTest {
+        whenever(bookDao.getBook("OL1W")).thenReturn(null)
+        whenever(api.getWork("OL1W")).thenThrow(RuntimeException("Network error"))
+
+        val result = repository.getBookDetail("OL1W")
+
+        assertEquals(null, result)
+    }
+
     // 10.2 — setBookmarked(true) on new book fetches work detail and inserts into Room
     @Test
     fun `setBookmarked true on new book fetches detail and inserts into Room`() = testScope.runTest {
@@ -101,6 +111,19 @@ class BookRepositoryTest {
 
         verify(api, times(1)).getWork(workId)
         verify(bookDao, times(1)).insert(any())
+    }
+
+    @Test
+    fun `setBookmarked true falls back to search metadata when network call throws`() = testScope.runTest {
+        val workId = "OL1W"
+        whenever(bookDao.getBook(workId)).thenReturn(null)
+        whenever(api.getWork(workId)).thenThrow(RuntimeException("Network error"))
+
+        repository.setBookmarked(workId, true, "Dune", listOf("Frank Herbert"))
+
+        verify(bookDao, times(1)).insert(org.mockito.kotlin.argThat {
+            this.workId == workId && title == "Dune" && authors == "Frank Herbert"
+        })
     }
 
     @Test
