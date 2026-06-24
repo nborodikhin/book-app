@@ -34,4 +34,4 @@
 
 - [x] 7.1 Run `./gradlew lint test` — all checks green
 - [x] 7.2 Run `./gradlew connectedAndroidTest` — all instrumentation tests pass
-- [ ] 7.3 Run `/opsx:verify` to confirm implementation matches specs before archiving
+- [x] 7.3 Run `/opsx:verify` to confirm implementation matches specs before archiving
