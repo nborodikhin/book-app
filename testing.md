@@ -57,7 +57,6 @@ Keep this runbook in sync with implementation. When a scenario changes, update t
 - `[automated]` Tapping the bookmark icon toggles it from outline ("Add bookmark") to filled ("Remove bookmark")
 - `[manual]` Bookmark a book, type a note, then scroll down — confirm the bookmark icon remains visible at the top-end corner (not scrolled off screen)
 - `[manual]` Bookmark a book, type a note, then rotate the device — confirm the note text is preserved after rotation
-- `[manual]` Navigate back from BookDetailScreen while a note is unsaved — confirm the note is retained when returning to the screen
 - `[manual]` Open a book that has a cover image — confirm the cover loads from the Open Library CDN
 
 ---
