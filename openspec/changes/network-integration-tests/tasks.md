@@ -16,20 +16,20 @@
 
 ## 4. Integration Test Class
 
-- [ ] 4.1 Create `app/src/androidTest/java/com/example/bookapp/ui/BookshelfIntegrationTest.kt` with `@HiltAndroidTest`, `createAndroidComposeRule<MainActivity>()`, and the `MockWebServerRule`
-- [ ] 4.2 Add test: search results appear from MockWebServer response
-- [ ] 4.3 Add test: network error during search shows error message
-- [ ] 4.4 Add test: Retry after error loads results from second enqueued response
-- [ ] 4.5 Add test: pagination — second page appended after scrolling to bottom
-- [ ] 4.6 Add test: bookmark from Search → Bookmarks tab shows the bookmarked book
-- [ ] 4.7 Add test: unbookmark from Bookmarks tab → book disappears
-- [ ] 4.8 Add test: tab switch Search → Bookmarks → Search preserves results
-- [ ] 4.9 Add test: Back from BookDetailScreen returns to Search with results
-- [ ] 4.10 Add test: navigate away while detail is loading — no crash
+- [x] 4.1 Create `app/src/androidTest/java/com/example/bookapp/ui/BookshelfIntegrationTest.kt` with `@HiltAndroidTest`, `createAndroidComposeRule<MainActivity>()`, and the `MockWebServerRule`
+- [x] 4.2 Add test: search results appear from MockWebServer response
+- [x] 4.3 Add test: network error during search shows error message
+- [x] 4.4 Add test: Retry after error loads results from second enqueued response
+- [x] 4.5 Add test: pagination — second page appended after scrolling to bottom
+- [x] 4.6 Add test: bookmark from Search → Bookmarks tab shows the bookmarked book
+- [x] 4.7 Add test: unbookmark from Bookmarks tab → book disappears
+- [x] 4.8 Add test: tab switch Search → Bookmarks → Search preserves results
+- [x] 4.9 Add test: Back from BookDetailScreen returns to Search with results
+- [x] 4.10 Add test: navigate away while detail is loading — no crash
 
 ## 5. Update testing.md
 
-- [ ] 5.1 Trim `testing.md` to exactly two manual items: cover image loading and device rotation
+- [x] 5.1 Trim `testing.md` to exactly two manual items: cover image loading and device rotation
 
 ## 6. Verify
 
