@@ -33,6 +33,6 @@
 
 ## 6. Verify
 
-- [ ] 6.1 Run `./gradlew test` — unit tests still pass
+- [x] 6.1 Run `./gradlew test` — unit tests still pass
 - [ ] 6.2 Run `./gradlew connectedAndroidTest` — all tests pass including new integration tests
 - [ ] 6.3 Run `./gradlew lint` — no new lint issues
