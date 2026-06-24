@@ -21,6 +21,7 @@ import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Test
 import org.mockito.kotlin.any
+import org.mockito.kotlin.eq
 import org.mockito.kotlin.mock
 import org.mockito.kotlin.never
 import org.mockito.kotlin.verify
@@ -100,6 +101,52 @@ class BookDetailViewModelTest {
             assertEquals("", awaitItem())
             cancelAndIgnoreRemainingEvents()
         }
+    }
+
+    @Test
+    fun `toggleBookmark when not bookmarked calls setBookmarked with true`() = runTest(dispatcher) {
+        val entity = BookEntity("OL1W", "Dune", "Frank Herbert", "A desert planet.", null)
+        whenever(repository.isBookmarked("OL1W")).thenReturn(flowOf(false))
+        whenever(repository.getBookDetail("OL1W")).thenReturn(entity)
+
+        val vm = viewModel("OL1W")
+        advanceUntilIdle()
+
+        vm.toggleBookmark()
+        advanceUntilIdle()
+
+        verify(repository).setBookmarked(
+            workId = eq("OL1W"),
+            bookmarked = eq(true),
+            title = eq("Dune"),
+            authors = eq(listOf("Frank Herbert")),
+            coverUrl = eq(null)
+        )
+    }
+
+    @Test
+    fun `toggleBookmark when bookmarked calls setBookmarked with false`() = runTest(dispatcher) {
+        val entity = BookEntity("OL1W", "Dune", "Frank Herbert", "A desert planet.", null)
+        whenever(repository.isBookmarked("OL1W")).thenReturn(flowOf(true))
+        whenever(repository.getBookDetail("OL1W")).thenReturn(entity)
+
+        val vm = viewModel("OL1W")
+        // subscribe so the StateFlow collects the true emission before toggleBookmark reads it
+        vm.isBookmarked.test {
+            advanceUntilIdle()
+            assertEquals(true, expectMostRecentItem())
+            vm.toggleBookmark()
+            advanceUntilIdle()
+            cancelAndIgnoreRemainingEvents()
+        }
+
+        verify(repository).setBookmarked(
+            workId = eq("OL1W"),
+            bookmarked = eq(false),
+            title = eq("Dune"),
+            authors = eq(listOf("Frank Herbert")),
+            coverUrl = eq(null)
+        )
     }
 
     // 10.10 — note capped at 300 chars
