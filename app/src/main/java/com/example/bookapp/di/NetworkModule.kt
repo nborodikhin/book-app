@@ -9,7 +9,12 @@ import dagger.hilt.components.SingletonComponent
 import kotlinx.serialization.json.Json
 import okhttp3.MediaType.Companion.toMediaType
 import retrofit2.Retrofit
+import javax.inject.Qualifier
 import javax.inject.Singleton
+
+@Qualifier
+@Retention(AnnotationRetention.BINARY)
+annotation class BaseUrl
 
 @Module
 @InstallIn(SingletonComponent::class)
@@ -23,8 +28,13 @@ object NetworkModule {
 
     @Provides
     @Singleton
-    fun provideRetrofit(): Retrofit = Retrofit.Builder()
-        .baseUrl("https://openlibrary.org/")
+    @BaseUrl
+    fun provideBaseUrl(): String = "https://openlibrary.org/"
+
+    @Provides
+    @Singleton
+    fun provideRetrofit(@BaseUrl baseUrl: String): Retrofit = Retrofit.Builder()
+        .baseUrl(baseUrl)
         .addConverterFactory(json.asConverterFactory("application/json".toMediaType()))
         .build()
 
