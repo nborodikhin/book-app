@@ -1,11 +1,14 @@
 package com.example.bookapp.ui
 
 import androidx.compose.ui.test.assertIsDisplayed
+import androidx.compose.ui.test.hasScrollToIndexAction
+import androidx.compose.ui.test.hasSetTextAction
 import androidx.compose.ui.test.junit4.createAndroidComposeRule
+import androidx.compose.ui.test.onAllNodesWithText
 import androidx.compose.ui.test.onNodeWithContentDescription
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
-import androidx.compose.ui.test.performScrollTo
+import androidx.compose.ui.test.performScrollToIndex
 import androidx.compose.ui.test.performTextInput
 import androidx.test.espresso.Espresso.pressBack
 import androidx.test.ext.junit.runners.AndroidJUnit4
@@ -14,13 +17,12 @@ import com.example.bookapp.utils.MockWebServerRule
 import dagger.hilt.android.testing.HiltAndroidRule
 import dagger.hilt.android.testing.HiltAndroidTest
 import okhttp3.mockwebserver.MockResponse
-import okhttp3.mockwebserver.SocketPolicy
 import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
 import java.util.concurrent.TimeUnit
 
-private const val DEBOUNCE_MS = 2100L
+private const val RESULT_TIMEOUT_MS = 10_000L
 
 private fun searchResponse(vararg titles: String): String {
     val docs = titles.mapIndexed { i, t ->
@@ -52,15 +54,23 @@ class BookshelfIntegrationTest {
     @get:Rule(order = 2)
     val composeRule = createAndroidComposeRule<MainActivity>()
 
+    private fun typeInSearchField(text: String) {
+        composeRule.onNode(hasSetTextAction()).performTextInput(text)
+    }
+
+    private fun waitForText(text: String) {
+        composeRule.waitUntil(timeoutMillis = RESULT_TIMEOUT_MS) {
+            composeRule.onAllNodesWithText(text).fetchSemanticsNodes().isNotEmpty()
+        }
+    }
+
     // 4.2 — search results appear from MockWebServer response
     @Test
     fun searchResultsAppearFromMockResponse() {
         mockWebServerRule.enqueueResponse(searchResponse("Dune", "Foundation"))
 
-        composeRule.onNodeWithText("Search books by title or author").performClick()
-        composeRule.onNodeWithText("Search books by title or author").performTextInput("dune001")
-        Thread.sleep(DEBOUNCE_MS)
-        composeRule.waitForIdle()
+        typeInSearchField("dune001")
+        waitForText("Dune")
 
         composeRule.onNodeWithText("Dune").assertIsDisplayed()
         composeRule.onNodeWithText("Foundation").assertIsDisplayed()
@@ -71,10 +81,8 @@ class BookshelfIntegrationTest {
     fun networkErrorDuringSearchShowsErrorMessage() {
         mockWebServerRule.enqueueError()
 
-        composeRule.onNodeWithText("Search books by title or author").performClick()
-        composeRule.onNodeWithText("Search books by title or author").performTextInput("dune002")
-        Thread.sleep(DEBOUNCE_MS)
-        composeRule.waitForIdle()
+        typeInSearchField("dune002")
+        waitForText("Something went wrong.")
 
         composeRule.onNodeWithText("Something went wrong.").assertIsDisplayed()
     }
@@ -85,15 +93,11 @@ class BookshelfIntegrationTest {
         mockWebServerRule.enqueueError()
         mockWebServerRule.enqueueResponse(searchResponse("Dune Messiah"))
 
-        composeRule.onNodeWithText("Search books by title or author").performClick()
-        composeRule.onNodeWithText("Search books by title or author").performTextInput("dune003")
-        Thread.sleep(DEBOUNCE_MS)
-        composeRule.waitForIdle()
-
-        composeRule.onNodeWithText("Something went wrong.").assertIsDisplayed()
+        typeInSearchField("dune003")
+        waitForText("Something went wrong.")
         composeRule.onNodeWithText("Retry").performClick()
-        composeRule.waitForIdle()
 
+        waitForText("Dune Messiah")
         composeRule.onNodeWithText("Dune Messiah").assertIsDisplayed()
     }
 
@@ -101,47 +105,43 @@ class BookshelfIntegrationTest {
     @Test
     fun paginationAppendsSecondPage() {
         mockWebServerRule.enqueueResponse(page20Response("P1"))
-        // page 2 with fewer items (signals last page)
         val page2Docs = (1..5).joinToString(",") { i ->
-            """{"key":"/works/OLP2${i}W","title":"P1 Page2 Book $i","author_name":["Author"],"cover_i":null}"""
+            """{"key":"/works/OLP2${i}W","title":"P2 Book $i","author_name":["Author"],"cover_i":null}"""
         }
         mockWebServerRule.enqueueResponse("""{"numFound":25,"docs":[$page2Docs]}""")
 
-        composeRule.onNodeWithText("Search books by title or author").performClick()
-        composeRule.onNodeWithText("Search books by title or author").performTextInput("paginate01")
-        Thread.sleep(DEBOUNCE_MS)
-        composeRule.waitForIdle()
+        typeInSearchField("paginate01")
+        waitForText("P1 Book 1")
 
-        composeRule.onNodeWithText("P1 Book 1").assertIsDisplayed()
+        // Scroll to last item of page 1 to trigger pagination
+        composeRule.onNode(hasScrollToIndexAction()).performScrollToIndex(19)
 
-        // Scroll to near the end of page 1 to trigger pagination
-        composeRule.onNodeWithText("P1 Book 20").performScrollTo()
-        composeRule.waitForIdle()
-        Thread.sleep(1500) // wait for page 2 network call
+        // Keep scrolling to index 20; before page 2 loads this clamps to 19 (no-op),
+        // and once page 2 loads it brings "P2 Book 1" into view.
+        composeRule.waitUntil(timeoutMillis = RESULT_TIMEOUT_MS) {
+            composeRule.onNode(hasScrollToIndexAction()).performScrollToIndex(20)
+            composeRule.onAllNodesWithText("P2 Book 1").fetchSemanticsNodes().isNotEmpty()
+        }
 
-        composeRule.onNodeWithText("P1 Page2 Book 1").performScrollTo()
-        composeRule.onNodeWithText("P1 Page2 Book 1").assertIsDisplayed()
+        composeRule.onNodeWithText("P2 Book 1").assertIsDisplayed()
     }
 
     // 4.6 — bookmark from Search → Bookmarks tab shows the bookmarked book
     @Test
     fun bookmarkFromSearchAppearsOnBookmarksTab() {
         mockWebServerRule.enqueueResponse(searchResponse("Neuromancer"))
-        // setBookmarked calls getWork()
+        // setBookmarked fetches work detail to store in Room
         mockWebServerRule.enqueueResponse(workDetailResponse("OL1W", "Neuromancer"))
 
-        composeRule.onNodeWithText("Search books by title or author").performClick()
-        composeRule.onNodeWithText("Search books by title or author").performTextInput("neuro01")
-        Thread.sleep(DEBOUNCE_MS)
-        composeRule.waitForIdle()
+        typeInSearchField("neuro01")
+        waitForText("Neuromancer")
 
-        composeRule.onNodeWithText("Neuromancer").assertIsDisplayed()
         composeRule.onNodeWithContentDescription("Add bookmark").performClick()
         composeRule.waitForIdle()
 
         composeRule.onNodeWithText("Bookmarks").performClick()
-        composeRule.waitForIdle()
 
+        waitForText("Neuromancer")
         composeRule.onNodeWithText("Neuromancer").assertIsDisplayed()
     }
 
@@ -149,13 +149,10 @@ class BookshelfIntegrationTest {
     @Test
     fun unbookmarkFromBookmarksTabRemovesBook() {
         mockWebServerRule.enqueueResponse(searchResponse("Ender's Game"))
-        // setBookmarked calls getWork()
         mockWebServerRule.enqueueResponse(workDetailResponse("OL1W", "Ender's Game"))
 
-        composeRule.onNodeWithText("Search books by title or author").performClick()
-        composeRule.onNodeWithText("Search books by title or author").performTextInput("ender01")
-        Thread.sleep(DEBOUNCE_MS)
-        composeRule.waitForIdle()
+        typeInSearchField("ender01")
+        waitForText("Ender's Game")
 
         composeRule.onNodeWithContentDescription("Add bookmark").performClick()
         composeRule.waitForIdle()
@@ -165,7 +162,7 @@ class BookshelfIntegrationTest {
         composeRule.onNodeWithText("Ender's Game").assertIsDisplayed()
 
         composeRule.onNodeWithContentDescription("Remove bookmark").performClick()
-        composeRule.waitForIdle()
+        waitForText("No bookmarks yet")
 
         composeRule.onNodeWithText("No bookmarks yet").assertIsDisplayed()
     }
@@ -175,12 +172,8 @@ class BookshelfIntegrationTest {
     fun tabSwitchPreservesSearchResults() {
         mockWebServerRule.enqueueResponse(searchResponse("The Left Hand of Darkness"))
 
-        composeRule.onNodeWithText("Search books by title or author").performClick()
-        composeRule.onNodeWithText("Search books by title or author").performTextInput("ursula01")
-        Thread.sleep(DEBOUNCE_MS)
-        composeRule.waitForIdle()
-
-        composeRule.onNodeWithText("The Left Hand of Darkness").assertIsDisplayed()
+        typeInSearchField("ursula01")
+        waitForText("The Left Hand of Darkness")
 
         composeRule.onNodeWithText("Bookmarks").performClick()
         composeRule.waitForIdle()
@@ -193,45 +186,40 @@ class BookshelfIntegrationTest {
     // 4.9 — Back from BookDetailScreen returns to Search with results
     @Test
     fun backFromDetailReturnsToSearch() {
-        mockWebServerRule.enqueueResponse(searchResponse("1984"))
-        mockWebServerRule.enqueueResponse(workDetailResponse("OL1W", "1984"))
+        mockWebServerRule.enqueueResponse(searchResponse("Nineteen Eighty-Four"))
+        mockWebServerRule.enqueueResponse(workDetailResponse("OL1W", "Nineteen Eighty-Four"))
 
-        composeRule.onNodeWithText("Search books by title or author").performClick()
-        composeRule.onNodeWithText("Search books by title or author").performTextInput("orwell01")
-        Thread.sleep(DEBOUNCE_MS)
-        composeRule.waitForIdle()
+        typeInSearchField("orwell01")
+        waitForText("Nineteen Eighty-Four")
 
-        composeRule.onNodeWithText("1984").performClick()
+        composeRule.onNodeWithText("Nineteen Eighty-Four").performClick()
         composeRule.waitForIdle()
 
         pressBack()
         composeRule.waitForIdle()
 
-        composeRule.onNodeWithText("1984").assertIsDisplayed()
+        composeRule.onNodeWithText("Nineteen Eighty-Four").assertIsDisplayed()
     }
 
     // 4.10 — navigate away while detail is loading — no crash
     @Test
     fun navigateAwayWhileDetailLoadingNoCrash() {
         mockWebServerRule.enqueueResponse(searchResponse("Fahrenheit 451"))
-        // Enqueue a slow detail response so we can navigate away while it's loading
+        // Slow detail response so we can navigate away while it's loading
         mockWebServerRule.server.enqueue(
             MockResponse()
                 .setResponseCode(200)
                 .setBody(workDetailResponse("OL1W", "Fahrenheit 451"))
-                .setBodyDelay(5, TimeUnit.SECONDS)
+                .setBodyDelay(2, TimeUnit.SECONDS)
         )
 
-        composeRule.onNodeWithText("Search books by title or author").performClick()
-        composeRule.onNodeWithText("Search books by title or author").performTextInput("bradbury01")
-        Thread.sleep(DEBOUNCE_MS)
-        composeRule.waitForIdle()
+        typeInSearchField("bradbury01")
+        waitForText("Fahrenheit 451")
 
         composeRule.onNodeWithText("Fahrenheit 451").performClick()
-        // Navigate back immediately while detail is still loading
         pressBack()
         composeRule.waitForIdle()
 
-        composeRule.onNodeWithText("Search books by title or author").assertIsDisplayed()
+        composeRule.onNodeWithText("Fahrenheit 451").assertIsDisplayed()
     }
 }
